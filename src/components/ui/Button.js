@@ -12,14 +12,14 @@ export default function Button({
   const baseClasses = 'font-bold rounded-2xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl';
   
   const variants = {
-    primary: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white focus:ring-blue-300 shadow-blue-200 hover:shadow-blue-300',
-    secondary: 'bg-gradient-to-r from-gray-600 to-slate-600 hover:from-gray-700 hover:to-slate-700 text-white focus:ring-gray-300 shadow-gray-200 hover:shadow-gray-300',
-    success: 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white focus:ring-green-300 shadow-green-200 hover:shadow-green-300',
+    primary: 'bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 text-white focus:ring-blue-300 shadow-blue-200 hover:shadow-blue-300',
+    secondary: 'bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white focus:ring-slate-300 shadow-slate-200 hover:shadow-slate-300',
+    success: 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white focus:ring-emerald-300 shadow-emerald-200 hover:shadow-emerald-300',
     danger: 'bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white focus:ring-red-300 shadow-red-200 hover:shadow-red-300',
     warning: 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white focus:ring-yellow-300 shadow-yellow-200 hover:shadow-yellow-300',
-    info: 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white focus:ring-cyan-300 shadow-cyan-200 hover:shadow-cyan-300',
+    info: 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white focus:ring-blue-300 shadow-blue-200 hover:shadow-blue-300',
     purple: 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white focus:ring-purple-300 shadow-purple-200 hover:shadow-purple-300',
-    outline: 'border-2 border-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 focus:ring-blue-300 shadow-blue-100 hover:shadow-blue-200',
+    outline: 'border-2 border-blue-600 dark:border-emerald-500 text-blue-600 dark:text-emerald-400 hover:bg-blue-600 dark:hover:bg-emerald-500 hover:text-white focus:ring-blue-300 dark:focus:ring-emerald-300 shadow-blue-100 hover:shadow-blue-200',
     glass: 'bg-white/20 backdrop-blur-lg border border-white/30 text-gray-800 dark:text-white hover:bg-white/30 focus:ring-white/50 shadow-white/20 hover:shadow-white/30'
   };
 

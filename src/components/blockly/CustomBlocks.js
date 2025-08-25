@@ -61,6 +61,195 @@ Blockly.Blocks['motion_turnleft'] = {
   }
 };
 
+// Advanced Motion Blocks
+Blockly.Blocks['motion_goto'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("🎯")
+        .appendField("روح للموقع")
+        .appendField("س:")
+        .appendField(new Blockly.FieldNumber(0, -240, 240), "X")
+        .appendField("ص:")
+        .appendField(new Blockly.FieldNumber(0, -180, 180), "Y");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour("#4C97FF");
+    this.setTooltip("روح مباشرة للموقع المحدد بالإحداثيات");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_glide'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("✈️")
+        .appendField("اطلع في")
+        .appendField(new Blockly.FieldNumber(1, 0, 10), "SECS")
+        .appendField("ثانية")
+        .appendField("للموقع س:")
+        .appendField(new Blockly.FieldNumber(0, -240, 240), "X")
+        .appendField("ص:")
+        .appendField(new Blockly.FieldNumber(0, -180, 180), "Y");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour("#4C97FF");
+    this.setTooltip("اطلع بسلاسة للموقع المحدد في المدة المعطاة");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_point_direction'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("🧭")
+        .appendField("اتجه نحو")
+        .appendField(new Blockly.FieldNumber(90, -179, 180), "DIRECTION")
+        .appendField("درجة");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour("#4C97FF");
+    this.setTooltip("اتجه نحو الاتجاه المحدد (90=يمين، -90=يسار، 0=فوق، 180=تحت)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_point_towards'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("👀")
+        .appendField("اتجه نحو")
+        .appendField(new Blockly.FieldDropdown([
+          ["مؤشر الفأرة", "mouse"],
+          ["وسط الشاشة", "center"],
+          ["اللاعب", "player"],
+          ["العدو", "enemy"],
+          ["الهدف", "target"]
+        ]), "TARGET");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour("#4C97FF");
+    this.setTooltip("اتجه نحو الكائن أو المكان المحدد");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_change_x'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("🔄")
+        .appendField("غير س بـ")
+        .appendField(new Blockly.FieldNumber(10, -Infinity, Infinity), "DX");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour("#4C97FF");
+    this.setTooltip("غير موقع س (الأفقي) بالقيمة المحددة");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_change_y'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("🔄")
+        .appendField("غير ص بـ")
+        .appendField(new Blockly.FieldNumber(10, -Infinity, Infinity), "DY");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour("#4C97FF");
+    this.setTooltip("غير موقع ص (العمودي) بالقيمة المحددة");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_set_x'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("📍")
+        .appendField("حط س على")
+        .appendField(new Blockly.FieldNumber(0, -240, 240), "X");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour("#4C97FF");
+    this.setTooltip("حط الموقع الأفقي (س) على القيمة المحددة");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_set_y'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("📍")
+        .appendField("حط ص على")
+        .appendField(new Blockly.FieldNumber(0, -180, 180), "Y");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour("#4C97FF");
+    this.setTooltip("حط الموقع العمودي (ص) على القيمة المحددة");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_if_on_edge_bounce'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("🏀")
+        .appendField("إذا لمست الحافة، ارتد");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour("#4C97FF");
+    this.setTooltip("إذا وصلت لحافة الشاشة، ارتد للاتجاه المعاكس");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_set_rotation_style'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("🔄")
+        .appendField("حط نمط الدوران على")
+        .appendField(new Blockly.FieldDropdown([
+          ["كل الاتجاهات", "all around"],
+          ["يمين-يسار فقط", "left-right"],
+          ["لا تدور", "don't rotate"]
+        ]), "STYLE");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour("#4C97FF");
+    this.setTooltip("اختر كيفية دوران الشخصية عند تغيير الاتجاه");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_move_forward'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("⬆️")
+        .appendField("تحرك للأمام")
+        .appendField(new Blockly.FieldNumber(10, -Infinity, Infinity), "STEPS")
+        .appendField("خطوة");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour("#4C97FF");
+    this.setTooltip("تحرك للأمام في الاتجاه الحالي");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['motion_move_backward'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("⬇️")
+        .appendField("تحرك للخلف")
+        .appendField(new Blockly.FieldNumber(10, -Infinity, Infinity), "STEPS")
+        .appendField("خطوة");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour("#4C97FF");
+    this.setTooltip("تحرك للخلف في الاتجاه المعاكس");
+    this.setHelpUrl("");
+  }
+};
+
 // Control Blocks in Tunisian Arabic
 Blockly.Blocks['control_repeat'] = {
   init: function() {

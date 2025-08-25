@@ -203,6 +203,119 @@ export const validateTaskCompletion = (workspace, task) => {
           : 'Add the "say" block from the Looks category.'
       };
 
+    // Advanced Motion blocks validation
+    case 'motion_goto':
+      return {
+        isValid: blockTypes.includes('motion_goto'),
+        message: blockTypes.includes('motion_goto') 
+          ? '🎯 Perfect! Your character can teleport to any position!' 
+          : '🎯 Add the "go to x: y:" block from the Motion category.'
+      };
+
+    case 'motion_glide':
+      return {
+        isValid: blockTypes.includes('motion_glide'),
+        message: blockTypes.includes('motion_glide') 
+          ? '✈️ Excellent! Your character will glide smoothly!' 
+          : '✈️ Add the "glide to x: y:" block from the Motion category.'
+      };
+
+    case 'motion_point_direction':
+      return {
+        isValid: blockTypes.includes('motion_point_direction'),
+        message: blockTypes.includes('motion_point_direction') 
+          ? '🧭 Great! You set the direction!' 
+          : '🧭 Add the "point in direction" block from the Motion category.'
+      };
+
+    case 'motion_point_towards':
+      return {
+        isValid: blockTypes.includes('motion_point_towards'),
+        message: blockTypes.includes('motion_point_towards') 
+          ? '👀 Perfect! Your character will look towards the target!' 
+          : '👀 Add the "point towards" block from the Motion category.'
+      };
+
+    case 'motion_change_x':
+      return {
+        isValid: blockTypes.includes('motion_change_x'),
+        message: blockTypes.includes('motion_change_x') 
+          ? '🔄 Excellent! You can move horizontally!' 
+          : '🔄 Add the "change x by" block from the Motion category.'
+      };
+
+    case 'motion_change_y':
+      return {
+        isValid: blockTypes.includes('motion_change_y'),
+        message: blockTypes.includes('motion_change_y') 
+          ? '🔄 Great! You can move vertically!' 
+          : '🔄 Add the "change y by" block from the Motion category.'
+      };
+
+    case 'motion_set_x':
+      return {
+        isValid: blockTypes.includes('motion_set_x'),
+        message: blockTypes.includes('motion_set_x') 
+          ? '📍 Perfect! You set the horizontal position!' 
+          : '📍 Add the "set x to" block from the Motion category.'
+      };
+
+    case 'motion_set_y':
+      return {
+        isValid: blockTypes.includes('motion_set_y'),
+        message: blockTypes.includes('motion_set_y') 
+          ? '📍 Excellent! You set the vertical position!' 
+          : '📍 Add the "set y to" block from the Motion category.'
+      };
+
+    case 'motion_if_on_edge_bounce':
+      return {
+        isValid: blockTypes.includes('motion_if_on_edge_bounce'),
+        message: blockTypes.includes('motion_if_on_edge_bounce') 
+          ? '🏀 Great! Your character will bounce off edges!' 
+          : '🏀 Add the "if on edge, bounce" block from the Motion category.'
+      };
+
+    case 'motion_set_rotation_style':
+      return {
+        isValid: blockTypes.includes('motion_set_rotation_style'),
+        message: blockTypes.includes('motion_set_rotation_style') 
+          ? '🔄 Perfect! You set the rotation style!' 
+          : '🔄 Add the "set rotation style" block from the Motion category.'
+      };
+
+    case 'motion_move_forward':
+      return {
+        isValid: blockTypes.includes('motion_move_forward'),
+        message: blockTypes.includes('motion_move_forward') 
+          ? '⬆️ Excellent! Moving forward in current direction!' 
+          : '⬆️ Add the "move forward" block from the Motion category.'
+      };
+
+    case 'motion_move_backward':
+      return {
+        isValid: blockTypes.includes('motion_move_backward'),
+        message: blockTypes.includes('motion_move_backward') 
+          ? '⬇️ Great! Moving backward!' 
+          : '⬇️ Add the "move backward" block from the Motion category.'
+      };
+
+    case 'motion_turnright':
+      return {
+        isValid: blockTypes.includes('motion_turnright'),
+        message: blockTypes.includes('motion_turnright') 
+          ? '↻ Perfect! Your character can turn right!' 
+          : '↻ Add the "turn right" block from the Motion category.'
+      };
+
+    case 'motion_turnleft':
+      return {
+        isValid: blockTypes.includes('motion_turnleft'),
+        message: blockTypes.includes('motion_turnleft') 
+          ? '↺ Excellent! Your character can turn left!' 
+          : '↺ Add the "turn left" block from the Motion category.'
+      };
+
     // Chat blocks validation
     case 'chat_set_username':
       return {
@@ -323,6 +436,91 @@ export const getHint = (workspace, task) => {
     case 'looks_say':
       if (!blockTypes.includes('looks_say')) {
         return "Look in the Looks category (purple blocks) for the 'say' block.";
+      }
+      break;
+
+    // Advanced Motion hints
+    case 'motion_goto':
+      if (!blockTypes.includes('motion_goto')) {
+        return "Look in the Motion category (blue blocks) for the 'go to x: y:' block to teleport instantly.";
+      }
+      break;
+
+    case 'motion_glide':
+      if (!blockTypes.includes('motion_glide')) {
+        return "Look in the Motion category for the 'glide' block to move smoothly over time.";
+      }
+      break;
+
+    case 'motion_point_direction':
+      if (!blockTypes.includes('motion_point_direction')) {
+        return "Look in the Motion category for the 'point in direction' block. Use 90 for right, -90 for left!";
+      }
+      break;
+
+    case 'motion_point_towards':
+      if (!blockTypes.includes('motion_point_towards')) {
+        return "Look in the Motion category for the 'point towards' block to face a specific target.";
+      }
+      break;
+
+    case 'motion_change_x':
+      if (!blockTypes.includes('motion_change_x')) {
+        return "Look in the Motion category for 'change x by' to move left (negative) or right (positive).";
+      }
+      break;
+
+    case 'motion_change_y':
+      if (!blockTypes.includes('motion_change_y')) {
+        return "Look in the Motion category for 'change y by' to move down (negative) or up (positive).";
+      }
+      break;
+
+    case 'motion_set_x':
+      if (!blockTypes.includes('motion_set_x')) {
+        return "Look in the Motion category for 'set x to' to place your character at a specific horizontal position.";
+      }
+      break;
+
+    case 'motion_set_y':
+      if (!blockTypes.includes('motion_set_y')) {
+        return "Look in the Motion category for 'set y to' to place your character at a specific vertical position.";
+      }
+      break;
+
+    case 'motion_if_on_edge_bounce':
+      if (!blockTypes.includes('motion_if_on_edge_bounce')) {
+        return "Look in the Motion category for 'if on edge, bounce' to make your character bounce off screen edges.";
+      }
+      break;
+
+    case 'motion_set_rotation_style':
+      if (!blockTypes.includes('motion_set_rotation_style')) {
+        return "Look in the Motion category for 'set rotation style' to control how your character rotates.";
+      }
+      break;
+
+    case 'motion_move_forward':
+      if (!blockTypes.includes('motion_move_forward')) {
+        return "Look in the Motion category for 'move forward' to move in the current direction.";
+      }
+      break;
+
+    case 'motion_move_backward':
+      if (!blockTypes.includes('motion_move_backward')) {
+        return "Look in the Motion category for 'move backward' to move in the opposite direction.";
+      }
+      break;
+
+    case 'motion_turnright':
+      if (!blockTypes.includes('motion_turnright')) {
+        return "Look in the Motion category (blue blocks) for the 'turn right' block.";
+      }
+      break;
+
+    case 'motion_turnleft':
+      if (!blockTypes.includes('motion_turnleft')) {
+        return "Look in the Motion category (blue blocks) for the 'turn left' block.";
       }
       break;
 

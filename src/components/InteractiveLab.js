@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import GuidePanel from './panels/GuidePanel';
 import PlaygroundPanel from './panels/PlaygroundPanel';
+import ForceBlocklyStyles from './ForceBlocklyStyles';
 import { lessons } from '../lib/lessons';
 
 export default function InteractiveLab() {
+  
   // Safety check to ensure lessons array exists and has content
   const initialLesson = lessons && lessons.length > 0 ? lessons[0] : null;
   const [currentLesson, setCurrentLesson] = useState(initialLesson);
@@ -43,114 +45,93 @@ export default function InteractiveLab() {
   };
 
   return (
-    <div className="flex flex-col h-full min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-indigo-100 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900">
-      {/* Top Navigation Bar */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-lg dark:from-gray-800 dark:via-gray-700 dark:to-gray-800">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm animate-pulse">
-                <span className="text-2xl">🎯</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white tracking-wide">
-                  مختبر البرمجة التفاعلي - NextGenCoding
-                </h1>
-                <p className="text-indigo-100 text-sm flex items-center gap-2">
-                  <span>🧩</span> تعلم البرمجة بالكتل المرئية
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">{/* Progress Ring */}
-              <div className="relative">
-                <div className="w-12 h-12">
-                  <svg className="transform -rotate-90 w-12 h-12">
-                    <circle
-                      cx="24"
-                      cy="24"
-                      r="20"
-                      stroke="rgba(255,255,255,0.2)"
-                      strokeWidth="4"
-                      fill="transparent"
-                    />
-                    <circle
-                      cx="24"
-                      cy="24"
-                      r="20"
-                      stroke="rgba(255,255,255,0.8)"
-                      strokeWidth="4"
-                      fill="transparent"
-                      strokeDasharray={`${(completedTasks.length / (currentLesson?.tasks?.length || 1)) * 125.6} 125.6`}
-                      strokeLinecap="round"
-                      className="transition-all duration-500"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">
-                      {Math.round((completedTasks.length / (currentLesson?.tasks?.length || 1)) * 100)}%
-                    </span>
-                  </div>
+    <div className="flex flex-col h-full min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 dark:from-slate-900 dark:via-blue-950 dark:to-emerald-950">
+      <ForceBlocklyStyles />
+      
+      {/* Header Professionnel avec Logo, Leçons et Progression */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-blue-500/5 to-emerald-500/10"></div>
+        <header className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-b border-blue-200/50 dark:border-emerald-700/50 shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-20">
+              {/* Logo et Titre */}
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-600 flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-xl">🎯</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-emerald-700 bg-clip-text text-transparent">
+                    NextGen Coding Lab
+                  </h1>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">
+                    Environnement de Programmation Interactive
+                  </p>
                 </div>
               </div>
               
-              {/* Lesson Selector */}
-              <div className="flex items-center space-x-3 bg-white/15 backdrop-blur-sm rounded-xl px-5 py-3 border border-white/20 shadow-lg">
-                <span className="text-sm font-medium text-white flex items-center gap-2">
-                  <span>📚</span> الدرس:
-                </span>
-                <select 
-                  value={currentLesson.id}
-                  onChange={(e) => handleLessonChange(parseInt(e.target.value))}
-                  className="bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/30 rounded-lg px-4 py-2 text-white text-sm font-medium placeholder-white/70 focus:bg-gradient-to-r focus:from-white/30 focus:to-white/20 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/60 transition-all duration-300 cursor-pointer hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15"
-                  style={{
-                    minWidth: '200px',
-                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
-                  }}
-                >
-                  {lessons.map(lesson => (
-                    <option key={lesson.id} value={lesson.id} className="text-gray-800 bg-white font-medium">
-                      {lesson.id}. {lesson.title}
-                    </option>
-                  ))}
-                </select>
+              {/* Progression et Contrôles */}
+              <div className="flex items-center space-x-6">
+                {/* Indicateur de Progression Moderne */}
+                <div className="hidden md:flex items-center space-x-4 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm rounded-2xl px-6 py-3 border border-blue-200/50 dark:border-emerald-700/50 shadow-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 animate-pulse"></div>
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      {completedTasks.length}/{currentLesson?.tasks?.length || 0} Tâches
+                    </span>
+                  </div>
+                  
+                  {/* Barre de Progression Améliorée */}
+                  <div className="w-32 h-3 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden shadow-inner">
+                    <div 
+                      className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-700 ease-out shadow-lg"
+                      style={{ width: `${(completedTasks.length / (currentLesson?.tasks?.length || 1)) * 100}%` }}
+                    />
+                  </div>
+                  
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {Math.round((completedTasks.length / (currentLesson?.tasks?.length || 1)) * 100)}%
+                  </div>
+                </div>
+                
+                {/* Sélecteur de Leçons Moderne */}
+                <div className="relative">
+                  <select 
+                    value={currentLesson.id}
+                    onChange={(e) => handleLessonChange(parseInt(e.target.value))}
+                    className="appearance-none bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm border-2 border-blue-200 dark:border-emerald-700 rounded-xl px-6 py-3 text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-emerald-500 focus:border-transparent shadow-lg transition-all duration-300 hover:shadow-xl min-w-[200px]"
+                  >
+                    {lessons.map(lesson => (
+                      <option key={lesson.id} value={lesson.id} className="bg-white dark:bg-slate-800">
+                        Leçon {lesson.id}: {lesson.title.substring(0, 25)}...
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        
-        {/* Progress Bar */}
-        <div className="h-2 bg-white/20 relative overflow-hidden">
-          <div 
-            className="h-full bg-gradient-to-r from-yellow-400 via-green-400 to-emerald-500 transition-all duration-700 ease-out relative"
-            style={{ width: `${(completedTasks.length / (currentLesson?.tasks?.length || 1)) * 100}%` }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
-          </div>
-          <div className="absolute right-2 top-0 bottom-0 flex items-center">
-            <span className="text-xs font-bold text-white/80 drop-shadow-lg">
-              {completedTasks.length}/{currentLesson?.tasks?.length || 0}
-            </span>
-          </div>
-        </div>
+        </header>
       </div>
 
-      {/* Main Content */}
-      <div className="flex flex-1 gap-4 p-4">
-        {/* Left Panel - Guide */}
-        <div className="w-full md:w-1/2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden">
-          <div className="h-full overflow-y-auto">
-            <GuidePanel 
-              lesson={currentLesson}
-              completedTasks={completedTasks}
-              onTaskComplete={handleTaskComplete}
-              workspace={workspace}
-            />
-          </div>
+      {/* Layout Split Moderne */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Panneau Gauche - Instructions */}
+        <div className="w-1/2 bg-gradient-to-br from-white/90 to-blue-50/50 dark:from-slate-800/90 dark:to-blue-950/50 backdrop-blur-sm border-r border-blue-200/50 dark:border-emerald-700/50">
+          <GuidePanel 
+            lesson={currentLesson}
+            completedTasks={completedTasks}
+            onTaskComplete={handleTaskComplete}
+            workspace={workspace}
+          />
         </div>
         
-        {/* Right Panel - Playground */}
-        <div className="w-full md:w-1/2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden">
+        {/* Panneau Droit - Espace de Codage */}
+        <div className="w-1/2 bg-gradient-to-br from-slate-50/90 to-emerald-50/50 dark:from-slate-900/90 dark:to-emerald-950/50 backdrop-blur-sm">
           <PlaygroundPanel 
             lesson={currentLesson}
             onWorkspaceChange={handleWorkspaceChange}

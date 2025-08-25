@@ -3,7 +3,198 @@ import * as Blockly from 'blockly/core';
 export const BLOCKLY_CONFIG = {
   toolbox: {
     kind: 'categoryToolbox',
-    contents: []
+    contents: [
+      {
+        kind: 'category',
+        name: 'الأحداث',
+        categorystyle: 'event_category',
+        contents: [
+          {
+            kind: 'block',
+            type: 'event_whenflagclicked'
+          }
+        ]
+      },
+      {
+        kind: 'category', 
+        name: 'الحركة',
+        categorystyle: 'motion_category',
+        contents: [
+          {
+            kind: 'block',
+            type: 'motion_movesteps'
+          },
+          {
+            kind: 'block',
+            type: 'motion_turnright'
+          },
+          {
+            kind: 'block',
+            type: 'motion_turnleft'
+          },
+          {
+            kind: 'block',
+            type: 'motion_goto'
+          },
+          {
+            kind: 'block',
+            type: 'motion_glide'
+          },
+          {
+            kind: 'block',
+            type: 'motion_point_direction'
+          },
+          {
+            kind: 'block',
+            type: 'motion_point_towards'
+          },
+          {
+            kind: 'block',
+            type: 'motion_change_x'
+          },
+          {
+            kind: 'block',
+            type: 'motion_change_y'
+          },
+          {
+            kind: 'block',
+            type: 'motion_set_x'
+          },
+          {
+            kind: 'block',
+            type: 'motion_set_y'
+          },
+          {
+            kind: 'block',
+            type: 'motion_if_on_edge_bounce'
+          },
+          {
+            kind: 'block',
+            type: 'motion_set_rotation_style'
+          },
+          {
+            kind: 'block',
+            type: 'motion_move_forward'
+          },
+          {
+            kind: 'block',
+            type: 'motion_move_backward'
+          }
+        ]
+      },
+      {
+        kind: 'category',
+        name: 'الظهور',
+        categorystyle: 'looks_category',
+        contents: [
+          {
+            kind: 'block',
+            type: 'looks_say'
+          },
+          {
+            kind: 'block',
+            type: 'looks_hide'
+          },
+          {
+            kind: 'block',
+            type: 'looks_show'
+          }
+        ]
+      },
+      {
+        kind: 'category',
+        name: 'الصوت',
+        categorystyle: 'sound_category',
+        contents: [
+          {
+            kind: 'block',
+            type: 'sound_play'
+          },
+          {
+            kind: 'block',
+            type: 'sound_play_note'
+          },
+          {
+            kind: 'block',
+            type: 'sound_play_drum'
+          },
+          {
+            kind: 'block',
+            type: 'sound_set_volume'
+          },
+          {
+            kind: 'block',
+            type: 'sound_change_volume'
+          },
+          {
+            kind: 'block',
+            type: 'sound_stop_all'
+          },
+          {
+            kind: 'block',
+            type: 'sound_play_sound_until_done'
+          }
+        ]
+      },
+      {
+        kind: 'category',
+        name: 'التحكم',
+        categorystyle: 'control_category',
+        contents: [
+          {
+            kind: 'block',
+            type: 'control_wait'
+          },
+          {
+            kind: 'block',
+            type: 'control_repeat'
+          },
+          {
+            kind: 'block',
+            type: 'control_forever'
+          }
+        ]
+      },
+      {
+        kind: 'category',
+        name: 'الشات',
+        categorystyle: 'chat_category',
+        contents: [
+          {
+            kind: 'block',
+            type: 'chat_send_message'
+          },
+          {
+            kind: 'block',
+            type: 'chat_reply_to_message'
+          },
+          {
+            kind: 'block',
+            type: 'chat_set_username'
+          },
+          {
+            kind: 'block',
+            type: 'chat_add_emoji'
+          },
+          {
+            kind: 'block',
+            type: 'chat_wait_for_message'
+          },
+          {
+            kind: 'block',
+            type: 'chat_show_typing'
+          },
+          {
+            kind: 'block',
+            type: 'chat_clear_messages'
+          },
+          {
+            kind: 'block',
+            type: 'chat_auto_reply'
+          }
+        ]
+      }
+    ]
   },
   grid: {
     spacing: 20,

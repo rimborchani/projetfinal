@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import BlocklyWorkspace from '../blockly/BlocklyWorkspace';
 import Stage from '../stage/Stage';
 import Controls from '../stage/Controls';
@@ -321,30 +321,42 @@ export default function PlaygroundPanel({ lesson, onWorkspaceChange }) {
   const stageType = isChatLesson ? 'chat' : 'normal';
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600">
+    <div className="h-full flex flex-col bg-transparent">
+      {/* Modern Professional Header */}
+      <div className="p-6 border-b border-blue-200/50 dark:border-emerald-700/50 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-              <span className="text-white text-lg">⚡</span>
+          <div className="flex items-center space-x-4">
+            <div className="w-14 h-14 bg-gradient-to-br from-emerald-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <span className="text-white text-xl">⚡</span>
             </div>
             <div>
-              <h2 className="text-white font-bold text-lg">Coding Playground</h2>
-              <p className="text-blue-100 text-sm">Drag, drop, and run your code!</p>
+              <h2 className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-blue-700 bg-clip-text text-transparent">
+                Coding Playground
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">
+                Drag, drop, and run your code
+              </p>
             </div>
           </div>
-          <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1">
-            <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`}></div>
-            <span className="text-white text-sm font-medium">
+          <div className={`flex items-center space-x-3 px-4 py-3 rounded-2xl shadow-lg backdrop-blur-sm transition-all duration-300 ${
+            isRunning 
+              ? 'bg-gradient-to-r from-emerald-100/80 to-green-200/80 dark:from-emerald-900/30 dark:to-green-900/30' 
+              : 'bg-white/80 dark:bg-slate-700/80'
+          }`}>
+            <div className={`w-3 h-3 rounded-full transition-all duration-500 ${
+              isRunning ? 'bg-gradient-to-r from-emerald-500 to-green-500 animate-pulse shadow-lg' : 'bg-slate-400'
+            }`}></div>
+            <span className={`text-sm font-semibold transition-all duration-300 ${
+              isRunning ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-600 dark:text-slate-400'
+            }`}>
               {isRunning ? 'Running' : 'Ready'}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Stage Area */}
-      <div className="h-64 bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 dark:from-gray-800 dark:via-indigo-900 dark:to-purple-900 relative border-b-4 border-gradient-to-r from-indigo-400 to-purple-500 shadow-lg">
+      {/* Enhanced Stage Area */}
+      <div className="h-64 bg-gradient-to-br from-slate-100/80 to-blue-100/80 dark:from-slate-800/80 dark:to-blue-900/80 backdrop-blur-sm relative border-b border-blue-200/50 dark:border-emerald-700/50 shadow-inner">
         <Controls 
           onRun={handleRun}
           onStop={handleStop}
@@ -359,44 +371,33 @@ export default function PlaygroundPanel({ lesson, onWorkspaceChange }) {
           stageType={stageType}
         />
         
-        {/* Decorative Elements */}
-        <div className="absolute top-4 right-4 flex space-x-2">
-          <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
-          <div className="w-3 h-3 bg-pink-400 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
-          <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
+        {/* Subtle corner decoration */}
+        <div className="absolute bottom-4 right-4 opacity-20">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-lg rotate-45"></div>
         </div>
       </div>
 
-      {/* Blockly Workspace */}
-      <div className="flex-1 relative bg-gradient-to-br from-slate-50 to-gray-100 dark:from-gray-900 dark:to-slate-800">
-        {/* Workspace Header */}
-        <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-r from-gray-800 to-slate-700 text-white px-4 py-2 shadow-md">
+      {/* Modern Blockly Workspace */}
+      <div className="flex-1 relative bg-gradient-to-br from-white/80 to-slate-100/80 dark:from-slate-800/80 dark:to-slate-900/80 backdrop-blur-sm">
+        {/* Enhanced Workspace Header */}
+        <div className="absolute top-0 left-0 right-0 z-10 bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm border-b border-blue-200/50 dark:border-emerald-700/50 px-6 py-4 shadow-sm">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <span className="text-lg">🧩</span>
-              <span className="font-semibold">Visual Code Builder</span>
+            <div className="flex items-center space-x-3">
+              <span className="text-xl">🧩</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">Visual Code Builder</span>
             </div>
-            <div className="text-sm bg-white/10 backdrop-blur-sm rounded px-2 py-1">
+            <div className="bg-gradient-to-r from-blue-100 to-emerald-100 dark:from-blue-900/30 dark:to-emerald-900/30 border border-blue-200 dark:border-emerald-700 rounded-xl px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 shadow-inner">
               {lesson.toolboxCategories?.join(' • ') || 'All Categories'}
             </div>
           </div>
         </div>
         
         {/* Blockly Container */}
-        <div className="pt-12 h-full">
+        <div className="pt-16 h-full">
           <BlocklyWorkspace 
             toolboxCategories={lesson.toolboxCategories}
             onWorkspaceChange={handleWorkspaceInit}
           />
-        </div>
-        
-        {/* Corner Decorations */}
-        <div className="absolute bottom-4 right-4 opacity-20">
-          <div className="flex flex-col space-y-2">
-            <div className="w-8 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
-            <div className="w-6 h-2 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full ml-2"></div>
-            <div className="w-4 h-2 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full ml-4"></div>
-          </div>
         </div>
       </div>
     </div>

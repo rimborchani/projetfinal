@@ -310,6 +310,176 @@ export const lessons = [
       image: "/sprites/chatbot.png",
       startPosition: { x: 0, y: 0 }
     }
+  },
+  {
+    id: 7,
+    title: "حركات متقدمة - Advanced Movement",
+    concept: "تعلم حركات متقدمة! اتحكم في موقع الشخصية باستخدام الإحداثيات والاتجاهات.",
+    tasks: [
+      {
+        id: 1,
+        instruction: "ابدا بالبلوك 'كي الراية تتنقر'",
+        blockType: "event_whenflagclicked",
+        category: "Events",
+        blockImage: "/blocks/when-flag-clicked.png",
+        hint: "كل برنامج يبدا بحدث!"
+      },
+      {
+        id: 2,
+        instruction: "روح للموقع س:100 ص:50",
+        blockType: "motion_goto",
+        category: "Motion",
+        blockImage: "/blocks/motion-goto.png",
+        hint: "استخدم بلوك 'روح للموقع' للانتقال فوراً!"
+      },
+      {
+        id: 3,
+        instruction: "اتجه نحو 90 درجة (يمين)",
+        blockType: "motion_point_direction",
+        category: "Motion", 
+        blockImage: "/blocks/motion-direction.png",
+        hint: "90 درجة = يمين، -90 = يسار، 0 = فوق، 180 = تحت"
+      },
+      {
+        id: 4,
+        instruction: "تحرك للأمام 50 خطوة",
+        blockType: "motion_move_forward",
+        category: "Motion",
+        blockImage: "/blocks/motion-forward.png",
+        hint: "سيتحرك في الاتجاه الذي يشير إليه!"
+      },
+      {
+        id: 5,
+        instruction: "اطلع بسلاسة للموقع س:0 ص:0 في ثانيتين",
+        blockType: "motion_glide",
+        category: "Motion",
+        blockImage: "/blocks/motion-glide.png",
+        hint: "الانتقال السلس أجمل من الانتقال الفوري!"
+      }
+    ],
+    toolboxCategories: ["Events", "Motion"],
+    sprite: {
+      name: "Rocket",
+      image: "/sprites/rocket.png",
+      startPosition: { x: -100, y: -50 }
+    },
+    expectedBlocks: [
+      {
+        type: "event_whenflagclicked",
+        next: {
+          type: "motion_goto",
+          fields: { X: "100", Y: "50" },
+          next: {
+            type: "motion_point_direction",
+            fields: { DIRECTION: "90" },
+            next: {
+              type: "motion_move_forward",
+              fields: { STEPS: "50" },
+              next: {
+                type: "motion_glide",
+                fields: { SECS: "2", X: "0", Y: "0" }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: 8,
+    title: "التحكم بالإحداثيات - Coordinate Control", 
+    concept: "اتعلم كيفية التحكم الدقيق في موقع الشخصية باستخدام إحداثيات س و ص.",
+    tasks: [
+      {
+        id: 1,
+        instruction: "ابدا بالبلوك 'كي الراية تتنقر'",
+        blockType: "event_whenflagclicked",
+        category: "Events",
+        blockImage: "/blocks/when-flag-clicked.png"
+      },
+      {
+        id: 2,
+        instruction: "حط الموقع س على -100",
+        blockType: "motion_set_x",
+        category: "Motion",
+        blockImage: "/blocks/motion-set-x.png",
+        hint: "س سالب = يسار، س موجب = يمين"
+      },
+      {
+        id: 3,
+        instruction: "غير ص بـ 50",
+        blockType: "motion_change_y",
+        category: "Motion",
+        blockImage: "/blocks/motion-change-y.png", 
+        hint: "ص موجب = فوق، ص سالب = تحت"
+      },
+      {
+        id: 4,
+        instruction: "كرر 5 مرات: غير س بـ 40",
+        blockType: "control_repeat",
+        category: "Control",
+        blockImage: "/blocks/repeat.png",
+        hint: "ضع بلوك 'غير س بـ 40' داخل البلوك كرر!"
+      },
+      {
+        id: 5,
+        instruction: "اضف بلوك 'إذا لمست الحافة، ارتد'",
+        blockType: "motion_if_on_edge_bounce",
+        category: "Motion",
+        blockImage: "/blocks/motion-bounce.png",
+        hint: "هذا سيجعل الشخصية ترتد عند وصولها لحافة الشاشة"
+      }
+    ],
+    toolboxCategories: ["Events", "Motion", "Control"],
+    sprite: {
+      name: "Ball",
+      image: "/sprites/ball.png",
+      startPosition: { x: 0, y: 0 }
+    }
+  },
+  {
+    id: 9,
+    title: "مطاردة الفأرة - Mouse Chase",
+    concept: "اجعل الشخصية تتبع مؤشر الفأرة باستخدام الحركة الذكية!",
+    tasks: [
+      {
+        id: 1,
+        instruction: "ابدا بالبلوك 'كي الراية تتنقر'",
+        blockType: "event_whenflagclicked",
+        category: "Events",
+        blockImage: "/blocks/when-flag-clicked.png"
+      },
+      {
+        id: 2,
+        instruction: "اضف بلوك 'كرر دايما'",
+        blockType: "control_forever",
+        category: "Control",
+        blockImage: "/blocks/forever.png",
+        hint: "هذا سيجعل الحركة مستمرة!"
+      },
+      {
+        id: 3,
+        instruction: "داخل البلوك كرر: اتجه نحو مؤشر الفأرة",
+        blockType: "motion_point_towards",
+        category: "Motion",
+        blockImage: "/blocks/motion-point-towards.png",
+        hint: "ضع هذا داخل بلوك 'كرر دايما'"
+      },
+      {
+        id: 4,
+        instruction: "اضف بلوك 'تحرك للأمام 5 خطوات'",
+        blockType: "motion_move_forward",
+        category: "Motion",
+        blockImage: "/blocks/motion-forward.png",
+        hint: "اجعل الخطوات قليلة للحركة السلسة"
+      }
+    ],
+    toolboxCategories: ["Events", "Motion", "Control"],
+    sprite: {
+      name: "Cat",
+      image: "/sprites/nexie-cat.png",
+      startPosition: { x: 0, y: 0 }
+    }
   }
 ];
 
