@@ -6,10 +6,19 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:populate": "node scripts/populate-lessons.js",
+    "db:setup": "npm run db:generate && npm run db:push && npm run db:populate"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.1",
     "blockly": "^12.1.0",
+    "dotenv": "^17.2.1",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.5",
     "next": "15.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

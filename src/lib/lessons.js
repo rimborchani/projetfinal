@@ -480,6 +480,92 @@ export const lessons = [
       image: "/sprites/nexie-cat.png",
       startPosition: { x: 0, y: 0 }
     }
+  },
+  {
+    id: 10,
+    title: "🎯 تعلم الأساسيات - Learning the Basics",
+    concept: "في هذا الدرس، راح نتعلم الأساسيات متاع البرمجة! راح نستعمل الأحداث باش نبداو البرنامج، والحركة باش نحركو الشخصية، والتحكم باش نكررو الأعمال.",
+    tasks: [
+      {
+        id: 1,
+        instruction: "ابدا بالبلوك 'كي الراية تتنقر' من فئة الأحداث",
+        blockType: "event_whenflagclicked",
+        category: "Events",
+        blockImage: "/blocks/when-flag-clicked.png",
+        hint: "🏁 دور على الراية الخضراء في قسم الأحداث!"
+      },
+      {
+        id: 2,
+        instruction: "زيد بلوك 'تحرك 50 خطوة' من فئة الحركة",
+        blockType: "motion_movesteps",
+        category: "Motion", 
+        blockImage: "/blocks/move-steps.png",
+        hint: "🚶‍♂️ بلوكات الحركة لونها أزرق وتحرك الشخصيات!"
+      },
+      {
+        id: 3,
+        instruction: "اضف بلوك 'كرر 3 مرات' من فئة التحكم",
+        blockType: "control_repeat",
+        category: "Control",
+        blockImage: "/blocks/repeat.png",
+        hint: "🔄 هذا البلوك راح يكرر الحركة عدة مرات!"
+      },
+      {
+        id: 4,
+        instruction: "حط بلوك 'دور يمين 90 درجة' داخل الحلقة",
+        blockType: "motion_point_direction",
+        category: "Motion",
+        blockImage: "/blocks/motion-direction.png",
+        hint: "↪️ ضع هذا البلوك داخل بلوك 'كرر' باش الشخصية تدور!"
+      },
+      {
+        id: 5,
+        instruction: "اضف صوت! حط بلوك 'اعزف نوتة دو' من فئة الصوت",
+        blockType: "sound_play_note",
+        category: "Sound",
+        blockImage: "/blocks/sound-note.png",
+        hint: "🎵 خلي البرنامج متاعك يعزف موسيقى جميلة!"
+      },
+      {
+        id: 6,
+        instruction: "في النهاية، خلي الشخصية تقول 'خلصت!' باستعمال بلوك 'قول'",
+        blockType: "looks_say",
+        category: "Looks",
+        blockImage: "/blocks/say.png",
+        hint: "💬 هذا راح يظهر رسالة فوق الشخصية!"
+      }
+    ],
+    toolboxCategories: ["Events", "Motion", "Control", "Sound", "Looks"],
+    sprite: {
+      name: "Nexie",
+      image: "/sprites/nexie-cat.png",
+      startPosition: { x: 0, y: 0 }
+    },
+    expectedBlocks: [
+      {
+        type: "event_whenflagclicked",
+        next: {
+          type: "motion_movesteps",
+          fields: { STEPS: 50 },
+          next: {
+            type: "control_repeat",
+            fields: { TIMES: 3 },
+            statement: {
+              type: "motion_point_direction",
+              fields: { DIRECTION: 90 }
+            },
+            next: {
+              type: "sound_play_note",
+              fields: { NOTE: "C", DURATION: 1 },
+              next: {
+                type: "looks_say",
+                fields: { MESSAGE: "خلصت!" }
+              }
+            }
+          }
+        }
+      }
+    ]
   }
 ];
 

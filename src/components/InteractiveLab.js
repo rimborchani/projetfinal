@@ -1,26 +1,69 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import GuidePanel from './panels/GuidePanel';
 import PlaygroundPanel from './panels/PlaygroundPanel';
 import ForceBlocklyStyles from './ForceBlocklyStyles';
-import { lessons } from '../lib/lessons';
+import { getAllLessons, getLesson } from '../lib/lessonsDB';
 
 export default function InteractiveLab() {
-  
-  // Safety check to ensure lessons array exists and has content
-  const initialLesson = lessons && lessons.length > 0 ? lessons[0] : null;
-  const [currentLesson, setCurrentLesson] = useState(initialLesson);
+  const [lessons, setLessons] = useState([]);
+  const [currentLesson, setCurrentLesson] = useState(null);
   const [completedTasks, setCompletedTasks] = useState([]);
   const [workspace, setWorkspace] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // If no lessons available, show error message
-  if (!initialLesson) {
+  // Charger les leçons au démarrage
+  useEffect(() => {
+    const loadLessons = async () => {
+      try {
+        setIsLoading(true);
+        const fetchedLessons = await getAllLessons();
+        setLessons(fetchedLessons);
+        
+        // Définir la première leçon comme leçon courante
+        if (fetchedLessons && fetchedLessons.length > 0) {
+          setCurrentLesson(fetchedLessons[0]);
+        }
+        setError(null);
+      } catch (err) {
+        console.error('Erreur lors du chargement des leçons:', err);
+        setError('Impossible de charger les leçons');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadLessons();
+  }, []);
+
+  // Affichage de chargement
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-indigo-100">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h1 className="text-xl font-bold text-blue-600 mb-2">Chargement...</h1>
+          <p>Récupération des leçons depuis la base de données...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Affichage d'erreur
+  if (error || !lessons || lessons.length === 0) {
     return (
       <div className="flex items-center justify-center h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-indigo-100">
         <div className="text-center p-8 bg-white rounded-lg shadow-lg">
           <h1 className="text-xl font-bold text-red-600 mb-4">Erreur</h1>
-          <p>Aucune leçon n'est disponible pour le moment.</p>
+          <p>{error || "Aucune leçon n'est disponible pour le moment."}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Réessayer
+          </button>
         </div>
       </div>
     );
@@ -36,11 +79,21 @@ export default function InteractiveLab() {
     setWorkspace(workspaceInstance);
   };
 
-  const handleLessonChange = (lessonId) => {
-    const lesson = lessons.find(l => l.id === lessonId);
-    if (lesson) {
-      setCurrentLesson(lesson);
-      setCompletedTasks([]); // Reset progress for new lesson
+  const handleLessonChange = async (lessonId) => {
+    try {
+      const lesson = await getLesson(lessonId);
+      if (lesson) {
+        setCurrentLesson(lesson);
+        setCompletedTasks([]); // Reset progress for new lesson
+      }
+    } catch (error) {
+      console.error('Erreur lors du changement de leçon:', error);
+      // Fallback vers la recherche locale
+      const fallbackLesson = lessons.find(l => l.id === lessonId);
+      if (fallbackLesson) {
+        setCurrentLesson(fallbackLesson);
+        setCompletedTasks([]);
+      }
     }
   };
 
@@ -71,6 +124,15 @@ export default function InteractiveLab() {
               
               {/* Progression et Contrôles */}
               <div className="flex items-center space-x-6">
+                {/* Lien Admin */}
+                <a 
+                  href="/admin/lessons" 
+                  className="hidden md:flex items-center space-x-2 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm rounded-xl px-4 py-2 border border-blue-200/50 dark:border-emerald-700/50 shadow-lg hover:shadow-xl transition-all duration-300 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600"
+                >
+                  <span>⚙️</span>
+                  <span>Admin</span>
+                </a>
+                
                 {/* Indicateur de Progression Moderne */}
                 <div className="hidden md:flex items-center space-x-4 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm rounded-2xl px-6 py-3 border border-blue-200/50 dark:border-emerald-700/50 shadow-lg">
                   <div className="flex items-center space-x-3">
@@ -96,7 +158,7 @@ export default function InteractiveLab() {
                 {/* Sélecteur de Leçons Moderne */}
                 <div className="relative">
                   <select 
-                    value={currentLesson.id}
+                    value={currentLesson?.id || ''}
                     onChange={(e) => handleLessonChange(parseInt(e.target.value))}
                     className="appearance-none bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm border-2 border-blue-200 dark:border-emerald-700 rounded-xl px-6 py-3 text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-emerald-500 focus:border-transparent shadow-lg transition-all duration-300 hover:shadow-xl min-w-[200px]"
                   >
