@@ -26,7 +26,8 @@ export async function GET(request, { params }) {
           step1: lesson.step1,
           step2: lesson.step2,
           step3: lesson.step3,
-          step4: lesson.step4
+          step4: lesson.step4,
+          correctCode: lesson.correctCode || '' // Include correctCode field
         });
         return NextResponse.json({ success: true, data, source: 'database' });
       }
@@ -61,7 +62,7 @@ export async function PUT(request, { params }) {
     const { id } = params;
     const lessonId = parseInt(id);
     const body = await request.json();
-    const { titre, concept, preview, step1, step2, step3, step4 } = body;
+    const { titre, concept, preview, step1, step2, step3, step4, correctCode } = body;
     
     if (!titre || !step1 || !step2 || !step3 || !step4) {
       return NextResponse.json(
@@ -81,7 +82,8 @@ export async function PUT(request, { params }) {
           step1,
           step2,
           step3,
-          step4
+          step4,
+          correctCode: correctCode || ''
         }
       });
       
@@ -94,7 +96,8 @@ export async function PUT(request, { params }) {
           step1: updatedLesson.step1,
           step2: updatedLesson.step2,
           step3: updatedLesson.step3,
-          step4: updatedLesson.step4
+          step4: updatedLesson.step4,
+          correctCode: updatedLesson.correctCode || ''
         });
         return NextResponse.json({ success: true, data, source: 'database' });
       }
@@ -124,6 +127,67 @@ export async function PUT(request, { params }) {
     console.error('❌ Erreur lors de la mise à jour de la leçon:', error);
     return NextResponse.json(
       { success: false, error: 'Impossible de mettre à jour la leçon' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request, { params }) {
+  try {
+    const { id } = params;
+    const lessonId = parseInt(id);
+    const body = await request.json();
+    const { correctCode } = body;
+    
+    if (correctCode === undefined) {
+      return NextResponse.json(
+        { success: false, error: 'Le champ correctCode est requis pour la mise à jour partielle' },
+        { status: 400 }
+      );
+    }
+
+    // Base de données SQLite avec Prisma
+    try {
+      const updatedLesson = await prisma.lesson.update({
+        where: { id: lessonId },
+        data: {
+          correctCode: correctCode || ''
+        }
+      });
+      
+      if (updatedLesson) {
+        console.log('✅ Code de référence mis à jour pour la leçon ID:', lessonId);
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Code de référence mis à jour avec succès',
+          data: {
+            id: updatedLesson.id,
+            correctCode: updatedLesson.correctCode
+          },
+          source: 'database' 
+        });
+      }
+    } catch (e) {
+      if (e.code === 'P2025') {
+        return NextResponse.json(
+          { success: false, error: 'Leçon non trouvée' },
+          { status: 404 }
+        );
+      }
+      console.error('❌ DB PATCH erreur:', e.message);
+    }
+    
+    // Fallback vers le stockage mémoire (pas d'implémentation pour correctCode dans memoryStorage)
+    console.log(`💾 Mise à jour partielle non supportée en mémoire pour la leçon ${lessonId}`);
+    return NextResponse.json(
+      { success: false, error: 'Mise à jour partielle non supportée en mode mémoire' },
+      { status: 501 }
+    );
+    
+  } catch (error) {
+    console.error('❌ Erreur lors de la mise à jour partielle de la leçon:', error);
+    return NextResponse.json(
+      { success: false, error: 'Impossible de mettre à jour le code de référence' },
       { status: 500 }
     );
   }

@@ -14,6 +14,7 @@ function toUiLesson(row) {
     title: row.titre,
     concept: row.concept || row.step1,
     preview: row.preview || '',
+    correctCode: row.correctCode || '', // Nouveau champ pour la validation par code
     tasks: [
       { id: 1, instruction: row.step1, blockType: 'event_whenflagclicked', category: 'Events', blockImage: '/blocks/when-flag-clicked.png', hint: 'Commencez par cliquer sur le drapeau vert!' },
       { id: 2, instruction: row.step2, blockType: 'motion_movesteps', category: 'Motion', blockImage: '/blocks/move-steps.png', hint: 'Utilisez les blocs de mouvement pour déplacer votre personnage.' },
@@ -53,7 +54,7 @@ export async function POST(request) {
   try {
     console.log("📡 API POST /api/lessons - Création d'une nouvelle leçon");
     const body = await request.json();
-    const { titre, concept, preview, step1, step2, step3, step4 } = body || {};
+    const { titre, concept, preview, step1, step2, step3, step4, correctCode } = body || {};
 
     if (!titre || !concept || !preview || !step1 || !step2 || !step3 || !step4) {
       return NextResponse.json({ success: false, error: 'Tous les champs sont obligatoires' }, { status: 400 });
@@ -68,7 +69,8 @@ export async function POST(request) {
           step1,
           step2,
           step3,
-          step4
+          step4,
+          correctCode: correctCode || ''
         }
       });
       console.log('✅ Leçon créée DB ID:', createdLesson.id);

@@ -2,6 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { LessonClient } from '../../lib/lessonClient';
+import { 
+  generateCorrectCodeFromWorkspace, 
+  validateWorkspaceForCodeGeneration,
+  getWorkspaceSummary 
+} from '../../lib/codeGeneration';
 
 export default function LessonManagement() {
   const [lessons, setLessons] = useState([]);
@@ -9,6 +14,14 @@ export default function LessonManagement() {
   const [editingLesson, setEditingLesson] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [dataSource, setDataSource] = useState('unknown');
+  
+  // États pour la génération de code de référence
+  const [showCodeGenerator, setShowCodeGenerator] = useState(false);
+  const [generatingCode, setGeneratingCode] = useState(false);
+  const [generatedCode, setGeneratedCode] = useState('');
+  const [workspaceSummary, setWorkspaceSummary] = useState(null);
+  const [selectedLessonForCode, setSelectedLessonForCode] = useState(null);
+  
   const [formData, setFormData] = useState({
     titre: '',
     concept: '',
@@ -16,7 +29,8 @@ export default function LessonManagement() {
     step1: '',
     step2: '',
     step3: '',
-    step4: ''
+    step4: '',
+    correctCode: '' // Nouveau champ pour le code de référence
   });
 
   // États pour les validations
@@ -73,33 +87,132 @@ export default function LessonManagement() {
     }
   };
 
+  // Nouvelle fonction : Générer le code de référence depuis Blockly
+  const generateCorrectCode = async (lessonId = null) => {
+    try {
+      setGeneratingCode(true);
+      setGeneratedCode('');
+      setWorkspaceSummary(null);
+
+      // Vérifier que Blockly est disponible
+      if (typeof window === 'undefined' || typeof Blockly === 'undefined') {
+        alert('Blockly n\'est pas disponible. Assurez-vous d\'être sur une page avec Blockly.');
+        return;
+      }
+
+      // Obtenir l'espace de travail Blockly actuel
+      const workspace = Blockly.getMainWorkspace();
+      
+      // Valider l'espace de travail
+      const validation = validateWorkspaceForCodeGeneration(workspace);
+      
+      if (!validation.success) {
+        alert(`Erreur de validation: ${validation.error}`);
+        return;
+      }
+
+      // Générer le code
+      const correctCode = generateCorrectCodeFromWorkspace(workspace);
+      setGeneratedCode(correctCode);
+      
+      // Obtenir un résumé de l'espace de travail pour l'affichage
+      const summary = getWorkspaceSummary(workspace);
+      setWorkspaceSummary(summary);
+
+      // Si un lesson ID est fourni, mettre à jour automatiquement
+      if (lessonId) {
+        await updateLessonCorrectCode(lessonId, correctCode);
+      }
+
+    } catch (error) {
+      console.error('Erreur lors de la génération du code:', error);
+      alert(`Erreur: ${error.message}`);
+    } finally {
+      setGeneratingCode(false);
+    }
+  };
+
+  // Fonction pour sauvegarder le code de référence
+  const updateLessonCorrectCode = async (lessonId, correctCode) => {
+    try {
+      const response = await fetch(`/api/lessons/${lessonId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          correctCode: correctCode
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la mise à jour du code');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Code de référence sauvegardé avec succès !');
+        await loadLessons(); // Recharger la liste
+      } else {
+        throw new Error(result.error || 'Erreur inconnue');
+      }
+
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      alert(`Erreur: ${error.message}`);
+    }
+  };
+
+  // Fonction pour ouvrir le générateur de code pour une leçon spécifique
+  const openCodeGeneratorForLesson = (lesson) => {
+    setSelectedLessonForCode(lesson);
+    setShowCodeGenerator(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const lessonData = {
+        titre: formData.titre,
+        concept: formData.concept,
+        preview: formData.preview,
+        step1: formData.step1,
+        step2: formData.step2,
+        step3: formData.step3,
+        step4: formData.step4,
+        correctCode: formData.correctCode || ''
+      };
+
       if (editingLesson) {
         // Mise à jour
-        await LessonClient.updateLesson(
-          editingLesson.id,
-          formData.titre,
-          formData.concept,
-          formData.preview,
-          formData.step1,
-          formData.step2,
-          formData.step3,
-          formData.step4
-        );
+        const response = await fetch(`/api/lessons/${editingLesson.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(lessonData)
+        });
+
+        if (!response.ok) {
+          throw new Error('Erreur lors de la mise à jour');
+        }
+
         setEditingLesson(null);
       } else {
         // Création
-        await LessonClient.createLesson(
-          formData.titre,
-          formData.concept,
-          formData.preview,
-          formData.step1,
-          formData.step2,
-          formData.step3,
-          formData.step4
-        );
+        const response = await fetch('/api/lessons', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(lessonData)
+        });
+
+        if (!response.ok) {
+          throw new Error('Erreur lors de la création');
+        }
+
         setShowAddForm(false);
       }
       
@@ -111,8 +224,8 @@ export default function LessonManagement() {
         step1: '',
         step2: '',
         step3: '',
-  step4: '',
-        
+        step4: '',
+        correctCode: ''
       });
       
       // Recharger les leçons
@@ -133,7 +246,9 @@ export default function LessonManagement() {
   const step2 = lesson.step2 ?? lesson.tasks?.[1]?.instruction ?? '';
   const step3 = lesson.step3 ?? lesson.tasks?.[2]?.instruction ?? '';
   const step4 = lesson.step4 ?? lesson.tasks?.[3]?.instruction ?? '';
-  setFormData({ titre, concept, preview, step1, step2, step3, step4 });
+  const correctCode = lesson.correctCode ?? '';
+  
+  setFormData({ titre, concept, preview, step1, step2, step3, step4, correctCode });
     setShowAddForm(true);
   };
 
@@ -152,6 +267,10 @@ export default function LessonManagement() {
   const cancelEdit = () => {
     setEditingLesson(null);
     setShowAddForm(false);
+    setShowCodeGenerator(false);
+    setSelectedLessonForCode(null);
+    setGeneratedCode('');
+    setWorkspaceSummary(null);
     setFormData({
       titre: '',
   concept: '',
@@ -159,7 +278,8 @@ export default function LessonManagement() {
       step1: '',
       step2: '',
       step3: '',
-  step4: ''
+  step4: '',
+  correctCode: ''
     });
   };
 
@@ -351,8 +471,147 @@ export default function LessonManagement() {
               >
                 Annuler
               </button>
+              
+              {/* Nouveau bouton pour générer le code de référence */}
+              <button
+                type="button"
+                onClick={() => setShowCodeGenerator(true)}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+              >
+                <span>🔧</span>
+                <span>Générer Code de Référence</span>
+              </button>
+            </div>
+
+            {/* Section Code de Référence */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center space-x-2">
+                <span>🎯</span>
+                <span>Code de Référence (pour validation automatique)</span>
+              </h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Code JavaScript généré
+                </label>
+                <textarea
+                  value={formData.correctCode}
+                  onChange={(e) => setFormData({...formData, correctCode: e.target.value})}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  rows={6}
+                  placeholder="Le code JavaScript sera généré automatiquement depuis vos blocs Blockly..."
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Ce code sera utilisé pour valider automatiquement les solutions des étudiants. 
+                  Utilisez le bouton &quot;Générer Code de Référence&quot; pour le créer depuis vos blocs Blockly.
+                </p>
+              </div>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Générateur de Code de Référence */}
+      {showCodeGenerator && (
+        <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4 flex items-center space-x-2 text-purple-800">
+            <span>🔧</span>
+            <span>Générateur de Code de Référence</span>
+          </h2>
+          
+          <div className="bg-white rounded-lg p-4 mb-4">
+            <h3 className="font-medium text-gray-800 mb-2">Instructions :</h3>
+            <ol className="list-decimal list-inside text-sm text-gray-600 space-y-1">
+              <li>Allez sur une page contenant un workspace Blockly (ex: /lab/1)</li>
+              <li>Construisez la solution correcte avec les blocs</li>
+              <li>Revenez ici et cliquez sur &quot;Générer depuis Blockly&quot;</li>
+              <li>Le code JavaScript sera généré et peut être sauvegardé</li>
+            </ol>
+          </div>
+
+          <div className="space-y-4">
+            {selectedLessonForCode && (
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Leçon sélectionnée :</strong> {selectedLessonForCode.titre}
+                </p>
+              </div>
+            )}
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => generateCorrectCode(selectedLessonForCode?.id)}
+                disabled={generatingCode}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center space-x-2"
+              >
+                {generatingCode ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Génération...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>⚡</span>
+                    <span>Générer depuis Blockly</span>
+                  </>
+                )}
+              </button>
+              
+              <button
+                onClick={() => setShowCodeGenerator(false)}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Fermer
+              </button>
+            </div>
+
+            {/* Résultats de la génération */}
+            {workspaceSummary && (
+              <div className="bg-white border rounded-lg p-4">
+                <h4 className="font-medium text-gray-800 mb-2">Résumé de l&apos;espace de travail :</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">Blocs totaux :</span> {workspaceSummary.totalBlocks}
+                  </div>
+                  <div>
+                    <span className="font-medium">Blocs principaux :</span> {workspaceSummary.topBlocks}
+                  </div>
+                  <div>
+                    <span className="font-medium">Événements :</span> {workspaceSummary.hasEventBlocks ? '✅' : '❌'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Mouvement :</span> {workspaceSummary.hasMotionBlocks ? '✅' : '❌'}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {generatedCode && (
+              <div className="bg-white border rounded-lg p-4">
+                <h4 className="font-medium text-gray-800 mb-2">Code généré :</h4>
+                <pre className="bg-gray-100 p-3 rounded text-sm overflow-auto max-h-40">
+                  <code>{generatedCode}</code>
+                </pre>
+                
+                <div className="mt-3 flex space-x-2">
+                  <button
+                    onClick={() => setFormData({...formData, correctCode: generatedCode})}
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
+                  >
+                    📋 Copier dans le formulaire
+                  </button>
+                  
+                  {selectedLessonForCode && (
+                    <button
+                      onClick={() => updateLessonCorrectCode(selectedLessonForCode.id, generatedCode)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
+                    >
+                      💾 Sauvegarder directement
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -407,6 +666,41 @@ export default function LessonManagement() {
                         Créé le: {new Date(lesson.created_at).toLocaleDateString('fr-FR')}
                       </div>
                     )}
+
+                    {/* Informations sur le code de référence */}
+                    <div className="mt-2 p-2 bg-gray-50 rounded">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs font-medium text-gray-600">Code de référence :</span>
+                          {lesson.correctCode && lesson.correctCode.trim() !== '' ? (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                              ✅ Configuré ({lesson.correctCode.length} caractères)
+                            </span>
+                          ) : (
+                            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                              ⚠️ Non configuré
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => openCodeGeneratorForLesson(lesson)}
+                          className="text-xs bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded transition-colors"
+                        >
+                          🔧 Gérer Code
+                        </button>
+                      </div>
+                      
+                      {lesson.correctCode && lesson.correctCode.trim() !== '' && (
+                        <details className="mt-2">
+                          <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                            Voir le code de référence
+                          </summary>
+                          <pre className="mt-1 text-xs bg-gray-100 p-2 rounded overflow-auto max-h-20">
+                            <code>{lesson.correctCode}</code>
+                          </pre>
+                        </details>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex space-x-2 ml-4">

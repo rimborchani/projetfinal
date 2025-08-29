@@ -3,6 +3,193 @@
  */
 
 /**
+ * Utilitaire pour valider du texte de manière flexible
+ * Accepte différentes variantes d'un même concept
+ */
+const validateFlexibleText = (actualText, expectedVariants, context = '') => {
+  if (!actualText || typeof actualText !== 'string') {
+    return { isValid: false, message: `Aucun texte trouvé${context ? ` dans ${context}` : ''}` };
+  }
+  
+  const actualLower = actualText.toLowerCase().trim();
+  const variants = Array.isArray(expectedVariants) ? expectedVariants : [expectedVariants];
+  
+  // Vérifier si le texte contient une des variantes acceptées
+  const matchFound = variants.some(variant => 
+    actualLower.includes(variant.toLowerCase().trim())
+  );
+  
+  if (matchFound) {
+    return {
+      isValid: true,
+      message: `🎉 Parfait! "${actualText}" est une réponse valide!`,
+      matchedText: actualText
+    };
+  }
+  
+  return {
+    isValid: false,
+    message: `Le texte "${actualText}" ne correspond pas aux attentes`,
+    hint: `Essayez avec: ${variants.join(', ')}`,
+    actualText
+  };
+};
+
+/**
+ * Dictionnaire des variantes acceptées pour différents concepts
+ */
+const TEXT_VARIANTS = {
+  greetings: ['bonjour', 'hello', 'hi', 'salut', 'coucou', 'hey', 'bonsoir', 'good morning', 'good evening'],
+  farewell: ['au revoir', 'bye', 'goodbye', 'à bientôt', 'see you', 'adieu', 'ciao'],
+  success: ['bravo', 'super', 'excellent', 'parfait', 'great', 'awesome', 'well done', 'félicitations'],
+  completion: ['terminé', 'fini', 'done', 'finished', 'complete', 'voilà', 'c\'est fait']
+};
+
+/**
+ * A utility function to clean a code string by removing all whitespace and comments.
+ * This ensures the comparison focuses on the logic, not formatting.
+ * @param {string} code - The raw code string to clean.
+ * @returns {string} The cleaned code string.
+ */
+function cleanCode(code) {
+  if (!code || typeof code !== 'string') {
+    return '';
+  }
+  
+  // Remove all whitespace (spaces, tabs, newlines)
+  let cleaned = code.replace(/\s+/g, '');
+
+  // Remove single-line comments (starts with //)
+  cleaned = cleaned.replace(/\/\/.*$/gm, '');
+
+  // Remove multi-line comments (starts with /* and ends with */)
+  cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, '');
+  
+  return cleaned;
+}
+
+/**
+ * Compares two code strings to see if they are logically identical.
+ * @param {string} correctCode - The code from the admin's correct solution.
+ * @param {string} userCode - The code from the user's submission.
+ * @returns {boolean} True if the codes are logically the same, false otherwise.
+ */
+function validateSolution(correctCode, userCode) {
+  const cleanedCorrectCode = cleanCode(correctCode);
+  const cleanedUserCode = cleanCode(userCode);
+  
+  // A direct string comparison now works perfectly.
+  return cleanedCorrectCode === cleanedUserCode;
+}
+
+/**
+ * Validates user's solution by comparing generated JavaScript code
+ * This is the most reliable method as it focuses on logic rather than visual structure
+ * @param {Object} workspace - The Blockly workspace
+ * @param {string} correctCode - The correct JavaScript code to compare against
+ * @returns {Object} Validation result with isValid, message, and additional info
+ */
+export const validateByCodeComparison = (workspace, correctCode) => {
+  if (!workspace) {
+    return { 
+      isValid: false, 
+      message: 'Workspace non disponible', 
+      hint: 'Assurez-vous que Blockly est correctement initialisé' 
+    };
+  }
+
+  if (!correctCode || typeof correctCode !== 'string') {
+    return {
+      isValid: false,
+      message: 'Code de référence manquant',
+      hint: 'Cette leçon n\'a pas de solution de référence définie'
+    };
+  }
+
+  try {
+    // Generate JavaScript code from user's workspace
+    const userSubmittedCode = Blockly.JavaScript.workspaceToCode(workspace);
+    
+    // Compare the codes using our validation function
+    const isValid = validateSolution(correctCode, userSubmittedCode);
+    
+    return {
+      isValid: isValid,
+      message: isValid 
+        ? '🎉 Parfait! Votre solution est correcte!' 
+        : '❌ Votre solution ne correspond pas à la réponse attendue. Vérifiez vos blocs.',
+      hint: isValid 
+        ? 'Excellent travail! Vous pouvez passer à la leçon suivante.' 
+        : 'Comparez votre solution avec les instructions et essayez à nouveau.',
+      userCode: userSubmittedCode,
+      cleanedUserCode: cleanCode(userSubmittedCode),
+      cleanedCorrectCode: cleanCode(correctCode),
+      validationMethod: 'code_comparison'
+    };
+  } catch (error) {
+    console.error('Erreur lors de la génération du code:', error);
+    return {
+      isValid: false,
+      message: 'Erreur lors de la validation du code',
+      hint: 'Vérifiez que vos blocs sont correctement configurés',
+      error: error.message
+    };
+  }
+};
+
+/**
+ * Enhanced validation function that tries code comparison first, then falls back to criteria-based validation
+ * @param {Object} workspace - The Blockly workspace
+ * @param {string} lessonId - The lesson identifier
+ * @returns {Object} Validation result
+ */
+export const validateLessonWithCodeComparison = async (workspace, lessonId) => {
+  if (!workspace) {
+    return { 
+      isValid: false, 
+      message: 'Workspace non disponible', 
+      hint: 'Assurez-vous que Blockly est correctement initialisé' 
+    };
+  }
+
+  try {
+    // Récupérer les données de la leçon depuis l'API
+    const response = await fetch(`/api/lessons/${lessonId}`);
+    if (!response.ok) {
+      throw new Error('Leçon non trouvée');
+    }
+    
+    const lesson = await response.json();
+    
+    // Try code comparison first if correctCode is available
+    if (lesson.correctCode && typeof lesson.correctCode === 'string' && lesson.correctCode.trim() !== '') {
+      const codeValidationResult = validateByCodeComparison(workspace, lesson.correctCode);
+      
+      // Add lesson context to the result
+      return {
+        ...codeValidationResult,
+        lessonTitle: lesson.title,
+        lessonId: lessonId,
+        validationMethod: 'code_comparison'
+      };
+    }
+    
+    // Fallback to existing criteria-based validation
+    console.log('Code de référence non disponible, utilisation de la validation par critères');
+    return await validateLessonDynamically(workspace, lessonId);
+    
+  } catch (error) {
+    console.error('Erreur lors de la validation avec comparaison de code:', error);
+    return { 
+      isValid: false, 
+      message: 'Erreur lors de la validation de la leçon', 
+      hint: 'Vérifiez que la leçon existe et est correctement configurée',
+      error: error.message
+    };
+  }
+};
+
+/**
  * Méthode de validation dynamique basée sur les données de la leçon
  * Cette méthode lit les critères de validation depuis les données de la leçon
  * au lieu de les coder en dur dans le switch/case
@@ -314,16 +501,39 @@ export const validateBlockChain = (actualBlock, expectedBlock) => {
 };
 
 export const validateTaskCompletion = async (workspace, task) => {
-  // Si la tâche a un lessonId, utiliser la validation dynamique
+  // Si la tâche a un lessonId, utiliser la nouvelle méthode de validation Blockly
   if (task.lessonId) {
-    const dynamicResult = await validateLessonDynamically(workspace, task.lessonId);
-    // Si la leçon n'a aucun critère défini, basculer sur la validation par cas
-    if (dynamicResult && dynamicResult.noCriteria) {
+    try {
+      // Import de la nouvelle validation Blockly
+      const { validateLessonWithBlocklyCode } = await import('./blocklyValidation.js');
+      
+      // Essayer la validation par comparaison de code Blockly
+      const blocklyResult = validateLessonWithBlocklyCode(workspace, task.lessonId);
+      
+      // ✅ Si la validation Blockly trouve un code de référence ET réussit, retourner le résultat
+      if (blocklyResult !== null && blocklyResult.validationMethod === 'code_comparison') {
+        return blocklyResult;
+      }
+      
+      // ✅ Sinon (pas de code de référence), fallback vers la méthode dynamique
+      const dynamicResult = await validateLessonDynamically(workspace, task.lessonId);
+      
+      // Si la validation dynamique n'a pas de critères, utiliser la méthode par cas
+      if (dynamicResult && dynamicResult.noCriteria) {
+        const allBlocks = workspace.getAllBlocks();
+        const blockTypes = allBlocks.map(block => block.type);
+        return validateTaskCase(task.blockType, blockTypes, allBlocks, workspace);
+      }
+      return dynamicResult;
+      
+    } catch (error) {
+      console.log('Erreur dans la validation Blockly:', error.message);
+      
+      // Fallback : validation par critères existante
       const allBlocks = workspace.getAllBlocks();
       const blockTypes = allBlocks.map(block => block.type);
       return validateTaskCase(task.blockType, blockTypes, allBlocks, workspace);
     }
-    return dynamicResult;
   }
   
   // Sinon, utiliser l'ancienne méthode avec switch/case
@@ -479,11 +689,69 @@ const validateTaskCase = (blockType, blockTypes, allBlocks, workspace) => {
 
     // Looks blocks validation
     case 'looks_say':
+      const hasSayBlock = blockTypes.includes('looks_say');
+      
+      if (!hasSayBlock) {
+        return {
+          isValid: false,
+          message: '❌ Ajoutez le bloc "dire" depuis la catégorie Apparence',
+          hint: 'Cherchez le bloc violet "dire" dans la catégorie Looks'
+        };
+      }
+      
+      // Vérifier le contenu du bloc say pour plus de flexibilité
+      const sayBlock = allBlocks.find(block => block.type === 'looks_say');
+      if (sayBlock && sayBlock.getFieldValue) {
+        const sayText = sayBlock.getFieldValue('MESSAGE') || '';
+        
+        if (sayText.trim() === '') {
+          return {
+            isValid: true,
+            message: '✅ Bloc "dire" ajouté! Tapez un message à l\'intérieur',
+            hint: 'Essayez "Bonjour", "Hello", ou n\'importe quel message!'
+          };
+        }
+        
+        // Validation flexible - accepter tout message non vide
+        const sayTextLower = sayText.toLowerCase().trim();
+        
+        // Messages spéciaux avec réactions personnalisées
+        if (TEXT_VARIANTS.greetings.some(greeting => sayTextLower.includes(greeting))) {
+          return {
+            isValid: true,
+            message: `🎉 Magnifique salutation! Votre personnage dit "${sayText}"`,
+            hint: 'Parfait! Les salutations rendent votre programme convivial!'
+          };
+        }
+        
+        if (TEXT_VARIANTS.success.some(success => sayTextLower.includes(success))) {
+          return {
+            isValid: true,
+            message: `🏆 Excellent message de félicitation! "${sayText}"`,
+            hint: 'Super choix! Les encouragements motivent!'
+          };
+        }
+        
+        if (TEXT_VARIANTS.completion.some(complete => sayTextLower.includes(complete))) {
+          return {
+            isValid: true,
+            message: `✅ Parfait message de fin! "${sayText}"`,
+            hint: 'Bien pensé! Indiquer la fin d\'un programme est important!'
+          };
+        }
+        
+        // Accepter tout autre message créatif
+        return {
+          isValid: true,
+          message: `🎨 Message créatif! Votre personnage dit "${sayText}"`,
+          hint: 'Fantastique! La créativité rend la programmation amusante!'
+        };
+      }
+      
       return {
-        isValid: blockTypes.includes('looks_say'),
-        message: blockTypes.includes('looks_say') 
-          ? 'Great! Your character can now speak!' 
-          : 'Add the "say" block from the Looks category.'
+        isValid: true,
+        message: '✅ Bloc "dire" ajouté avec succès!',
+        hint: 'Maintenant tapez un message dans le bloc!'
       };
 
     // Advanced Motion blocks validation

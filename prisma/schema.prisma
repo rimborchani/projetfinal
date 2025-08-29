@@ -11,15 +11,16 @@ datasource db {
 }
 
 model Lesson {
-  id         Int      @id @default(autoincrement())
-  titre      String
-  concept    String   @default("")
-  preview    String   @default("")
-  step1      String
-  step2      String
-  step3      String
-  step4      String
-  created_at DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  titre       String
+  concept     String   @default("")
+  preview     String   @default("")
+  step1       String
+  step2       String
+  step3       String
+  step4       String
+  
+  created_at  DateTime @default(now())
 
   @@map("lessons")
 }

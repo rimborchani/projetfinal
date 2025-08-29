@@ -19,6 +19,33 @@ const exampleLessons = [
     step2: "Ajouter un bloc 'jouer la note Do' depuis la catégorie Son",
     step3: "Ajouter un bloc 'attendre 1 seconde' pour créer une pause",
     step4: "Terminer avec 'jouer la note Mi' pour faire une petite mélodie"
+  },
+  {
+    titre: "Nexie fait le carré",
+    concept: "Apprendre les boucles et les rotations pour dessiner un carré",
+    preview: "Faire dessiner un carré parfait à Nexie",
+    step1: "Ajouter le bloc 'quand drapeau cliqué",
+    step2: "Ajouter 'répéter 4 fois",
+    step3: "Dans la boucle : 'avancer de 100 pas",
+    step4: "Toujours dans la boucle : 'tourner à droite de 90°"
+  },
+  {
+    titre: " une animation de personnage qui bouge et parle",
+    concept: "Créer une animation de personnage qui bouge et parle",
+    preview: "Apprenez les bases du mouvement et de la communication avec votre personnage virtuel. Une leçon parfaite pour débuter !",
+    step1: "Ajoutez le bloc \"quand drapeau cliqué\" depuis la catégorie Événements pour démarrer votre programme",
+    step2: "Glissez le bloc \"avancer de 10 pas\" depuis la catégorie Mouvement et connectez-le sous le premier bloc",
+    step3: "Ajoutez le bloc \"répéter 3 fois\" depuis la catégorie Contrôle pour créer une boucle de mouvement",
+    step4: "Terminez avec le bloc \"dire Bonjour!\" depuis la catégorie Apparence pour que le personnage parle"
+  },
+  {
+    titre: " une animation de personnage qui bouge et parle",
+    concept: "Créer une animation de personnage qui bouge et parle",
+    preview: "Apprenez les bases du mouvement et de la communication avec votre personnage virtuel. Une leçon parfaite pour débuter !",
+    step1: "Ajoutez le bloc \"quand drapeau cliqué\" depuis la catégorie Événements pour démarrer votre programme",
+    step2: "Glissez le bloc \"avancer de 10 pas\" depuis la catégorie Mouvement et connectez-le sous le premier bloc",
+    step3: "Ajoutez le bloc \"répéter 3 fois\" depuis la catégorie Contrôle pour créer une boucle de mouvement",
+    step4: "Terminez avec le bloc \"dire Bonjour!\" depuis la catégorie Apparence pour que le personnage parle"
   }
 ];
 
