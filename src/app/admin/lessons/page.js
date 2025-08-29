@@ -1,4 +1,5 @@
 import LessonManagement from '../../../components/admin/LessonManagement';
+import Link from 'next/link';
 
 export default function AdminLessonsPage() {
   return (
@@ -18,12 +19,12 @@ export default function AdminLessonsPage() {
             </div>
             
             <div className="flex items-center space-x-4">
-              <a 
+              <Link 
                 href="/" 
                 className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors"
               >
                 ← Retour au laboratoire
-              </a>
+              </Link>
             </div>
           </div>
         </div>

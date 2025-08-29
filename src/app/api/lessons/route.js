@@ -2,7 +2,10 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import memoryStorage from '../../../lib/memoryStorage';
-import { neon } from '@neondatabase/serverless';
+import { PrismaClient } from '@prisma/client';
+import { autoSyncSeed } from '../../../lib/autoSync.js';
+
+const prisma = new PrismaClient();
 
 // Transformer un enregistrement DB -> format UI
 function toUiLesson(row) {
@@ -24,18 +27,15 @@ function toUiLesson(row) {
 export async function GET() {
   try {
     console.log('📡 API GET /api/lessons - Début de la requête');
-  const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
-    if (connectionString) {
-      try {
-        const sql = neon(connectionString);
-        const rows = await sql`SELECT id, titre, concept, preview, step1, step2, step3, step4, created_at FROM lessons ORDER BY id`;
-        console.log(`✅ ${rows.length} leçon(s) depuis la base de données`);
-        return NextResponse.json({ success: true, data: rows.map(toUiLesson), source: 'database' });
-      } catch (e) {
-        console.error('❌ DB GET erreur:', e.message);
-      }
-    } else {
-      console.log('❌ Aucune URL DB configurée');
+    
+    try {
+      const lessons = await prisma.lesson.findMany({
+        orderBy: { id: 'asc' }
+      });
+      console.log(`✅ ${lessons.length} leçon(s) depuis la base de données SQLite`);
+      return NextResponse.json({ success: true, data: lessons.map(toUiLesson), source: 'database' });
+    } catch (e) {
+      console.error('❌ DB GET erreur:', e.message);
     }
 
     // Fallback mémoire
@@ -59,21 +59,26 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Tous les champs sont obligatoires' }, { status: 400 });
     }
 
-  const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
-  if (connectionString) {
-      try {
-        const sql = neon(connectionString);
-        const rows = await sql`
-          INSERT INTO lessons (titre, concept, preview, step1, step2, step3, step4)
-          VALUES (${titre}, ${concept}, ${preview}, ${step1}, ${step2}, ${step3}, ${step4})
-          RETURNING id, titre, concept, preview, step1, step2, step3, step4, created_at
-        `;
-        const created = rows[0];
-        console.log('✅ Leçon créée DB ID:', created?.id);
-        return NextResponse.json({ success: true, data: toUiLesson(created), source: 'database' }, { status: 201 });
-      } catch (e) {
-        console.error('❌ DB POST erreur:', e.message);
-      }
+    try {
+      const createdLesson = await prisma.lesson.create({
+        data: {
+          titre,
+          concept,
+          preview,
+          step1,
+          step2,
+          step3,
+          step4
+        }
+      });
+      console.log('✅ Leçon créée DB ID:', createdLesson.id);
+      
+      // ✨ Auto-synchronisation du seed
+      autoSyncSeed().catch(err => console.error('❌ Erreur auto-sync:', err));
+      
+      return NextResponse.json({ success: true, data: toUiLesson(createdLesson), source: 'database' }, { status: 201 });
+    } catch (e) {
+      console.error('❌ DB POST erreur:', e.message);
     }
 
     // Fallback mémoire si DB indisponible

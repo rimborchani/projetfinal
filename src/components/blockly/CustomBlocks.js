@@ -589,10 +589,12 @@ Blockly.Blocks['chat_auto_reply'] = {
   }
 };
 
-export default {
+const CustomBlocks = {
   // Export all custom blocks
   initializeBlocks: () => {
     // All blocks are already defined above
     console.log('بلوكات تعليمية مخصصة تم تهيئتها');
   }
 };
+
+export default CustomBlocks;

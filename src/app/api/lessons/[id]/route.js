@@ -2,27 +2,36 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import memoryStorage from '../../../../lib/memoryStorage';
-import { neon } from '@neondatabase/serverless';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export async function GET(request, { params }) {
   try {
     const { id } = params;
     const lessonId = parseInt(id);
 
-    // Base de données d'abord (Neon direct)
-  const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
-  if (connectionString) {
-      try {
-        const sql = neon(connectionString);
-        const rows = await sql`SELECT id, titre, concept, preview, step1, step2, step3, step4, created_at FROM lessons WHERE id = ${lessonId}`;
-        const row = rows[0];
-        if (row) {
-          const data = memoryStorage.transformLesson({ id: row.id, titre: row.titre, concept: row.concept, preview: row.preview, step1: row.step1, step2: row.step2, step3: row.step3, step4: row.step4 });
-          return NextResponse.json({ success: true, data, source: 'database' });
-        }
-      } catch (e) {
-        console.error('❌ DB GET by id erreur:', e.message);
+    // Base de données SQLite avec Prisma
+    try {
+      const lesson = await prisma.lesson.findUnique({
+        where: { id: lessonId }
+      });
+      
+      if (lesson) {
+        const data = memoryStorage.transformLesson({
+          id: lesson.id,
+          titre: lesson.titre,
+          concept: lesson.concept,
+          preview: lesson.preview,
+          step1: lesson.step1,
+          step2: lesson.step2,
+          step3: lesson.step3,
+          step4: lesson.step4
+        });
+        return NextResponse.json({ success: true, data, source: 'database' });
       }
+    } catch (e) {
+      console.error('❌ DB GET by id erreur:', e.message);
     }
     
     // Fallback vers le stockage mémoire
@@ -51,39 +60,57 @@ export async function PUT(request, { params }) {
   try {
     const { id } = params;
     const lessonId = parseInt(id);
-  const body = await request.json();
-  const { titre, concept, preview, step1, step2, step3, step4 } = body;
+    const body = await request.json();
+    const { titre, concept, preview, step1, step2, step3, step4 } = body;
     
-  if (!titre || !step1 || !step2 || !step3 || !step4) {
+    if (!titre || !step1 || !step2 || !step3 || !step4) {
       return NextResponse.json(
         { success: false, error: 'Tous les champs sont obligatoires' },
         { status: 400 }
       );
     }
-    // DB d'abord
-  const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
-  if (connectionString) {
-      try {
-        const sql = neon(connectionString);
-        const rows = await sql`
-          UPDATE lessons
-          SET titre = ${titre}, concept = ${concept}, preview = ${preview}, step1 = ${step1}, step2 = ${step2}, step3 = ${step3}, step4 = ${step4}
-          WHERE id = ${lessonId}
-          RETURNING id, titre, concept, preview, step1, step2, step3, step4, created_at
-        `;
-        const row = rows[0];
-        if (row) {
-          const data = memoryStorage.transformLesson({ id: row.id, titre: row.titre, concept: row.concept, preview: row.preview, step1: row.step1, step2: row.step2, step3: row.step3, step4: row.step4 });
-          return NextResponse.json({ success: true, data, source: 'database' });
+
+    // Base de données SQLite avec Prisma
+    try {
+      const updatedLesson = await prisma.lesson.update({
+        where: { id: lessonId },
+        data: {
+          titre,
+          concept,
+          preview,
+          step1,
+          step2,
+          step3,
+          step4
         }
-      } catch (e) {
-        console.error('❌ DB PUT erreur:', e.message);
+      });
+      
+      if (updatedLesson) {
+        const data = memoryStorage.transformLesson({
+          id: updatedLesson.id,
+          titre: updatedLesson.titre,
+          concept: updatedLesson.concept,
+          preview: updatedLesson.preview,
+          step1: updatedLesson.step1,
+          step2: updatedLesson.step2,
+          step3: updatedLesson.step3,
+          step4: updatedLesson.step4
+        });
+        return NextResponse.json({ success: true, data, source: 'database' });
       }
+    } catch (e) {
+      if (e.code === 'P2025') {
+        return NextResponse.json(
+          { success: false, error: 'Leçon non trouvée' },
+          { status: 404 }
+        );
+      }
+      console.error('❌ DB PUT erreur:', e.message);
     }
     
     // Fallback vers le stockage mémoire
     console.log(`💾 Mise à jour de la leçon ${lessonId} en mémoire`);
-  const updatedLesson = memoryStorage.updateLesson(lessonId, titre, concept, preview, step1, step2, step3, step4);
+    const updatedLesson = memoryStorage.updateLesson(lessonId, titre, concept, preview, step1, step2, step3, step4);
     
     if (!updatedLesson) {
       return NextResponse.json(
@@ -92,7 +119,7 @@ export async function PUT(request, { params }) {
       );
     }
     
-  return NextResponse.json({ success: true, data: updatedLesson, source: 'memory' });
+    return NextResponse.json({ success: true, data: updatedLesson, source: 'memory' });
   } catch (error) {
     console.error('❌ Erreur lors de la mise à jour de la leçon:', error);
     return NextResponse.json(
@@ -106,18 +133,21 @@ export async function DELETE(request, { params }) {
   try {
     const { id } = params;
     const lessonId = parseInt(id);
-    // DB d'abord
-    const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
-    if (connectionString) {
-      try {
-        const sql = neon(connectionString);
-        const rows = await sql`DELETE FROM lessons WHERE id = ${lessonId} RETURNING id`;
-        if (rows.length > 0) {
-          return NextResponse.json({ success: true, message: 'Leçon supprimée avec succès', source: 'database' });
-        }
-      } catch (e) {
-        console.error('❌ DB DELETE erreur:', e.message);
+    
+    // Base de données SQLite avec Prisma
+    try {
+      await prisma.lesson.delete({
+        where: { id: lessonId }
+      });
+      return NextResponse.json({ success: true, message: 'Leçon supprimée avec succès', source: 'database' });
+    } catch (e) {
+      if (e.code === 'P2025') {
+        return NextResponse.json(
+          { success: false, error: 'Leçon non trouvée' },
+          { status: 404 }
+        );
       }
+      console.error('❌ DB DELETE erreur:', e.message);
     }
 
     // Fallback vers le stockage mémoire

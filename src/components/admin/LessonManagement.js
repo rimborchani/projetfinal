@@ -11,13 +11,39 @@ export default function LessonManagement() {
   const [dataSource, setDataSource] = useState('unknown');
   const [formData, setFormData] = useState({
     titre: '',
-  concept: '',
-  preview: '',
+    concept: '',
+    preview: '',
     step1: '',
     step2: '',
     step3: '',
-  step4: ''
+    step4: ''
   });
+
+  // États pour les validations
+  const [validationSteps, setValidationSteps] = useState([
+    { id: 1, instruction: '', blockType: '', category: '', hint: '' },
+    { id: 2, instruction: '', blockType: '', category: '', hint: '' },
+    { id: 3, instruction: '', blockType: '', category: '', hint: '' },
+    { id: 4, instruction: '', blockType: '', category: '', hint: '' }
+  ]);
+
+  // Types de blocs disponibles pour validation
+  const availableBlockTypes = [
+    { value: 'event_whenflagclicked', label: 'Quand drapeau cliqué', category: 'Events' },
+    { value: 'motion_movesteps', label: 'Avancer de X pas', category: 'Motion' },
+    { value: 'motion_goto', label: 'Aller à position', category: 'Motion' },
+    { value: 'motion_glide', label: 'Glisser vers position', category: 'Motion' },
+    { value: 'motion_turnright', label: 'Tourner à droite', category: 'Motion' },
+    { value: 'motion_turnleft', label: 'Tourner à gauche', category: 'Motion' },
+    { value: 'sound_play', label: 'Jouer son', category: 'Sound' },
+    { value: 'sound_play_note', label: 'Jouer note', category: 'Sound' },
+    { value: 'control_wait', label: 'Attendre', category: 'Control' },
+    { value: 'control_repeat', label: 'Répéter', category: 'Control' },
+    { value: 'looks_say', label: 'Dire', category: 'Looks' },
+    { value: 'chat_set_username', label: 'Définir nom utilisateur', category: 'Chat' },
+    { value: 'chat_send_message', label: 'Envoyer message', category: 'Chat' },
+    { value: 'complete', label: 'Étape finale (exécution)', category: 'Complete' }
+  ];
 
   // Charger les leçons
   useEffect(() => {
@@ -153,7 +179,7 @@ export default function LessonManagement() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Gestion des Leçons</h1>
             <div className="flex items-center space-x-4 mt-2">
-              <p className="text-gray-600">Gérez les leçons de votre plateforme d'apprentissage</p>
+              <p className="text-gray-600">Gérez les leçons de votre plateforme d&apos;apprentissage</p>
               
               {/* Indicateur de source de données */}
               <div className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -248,7 +274,7 @@ export default function LessonManagement() {
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}
                   required
-                  placeholder="Texte d'aperçu affiché en en-tête"
+                  placeholder="Texte d&apos;aperçu affiché en en-tête"
                 />
               </div>
             </div>

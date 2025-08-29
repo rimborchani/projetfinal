@@ -2,6 +2,244 @@
  * Validation functions for checking if student's block arrangement is correct
  */
 
+/**
+ * Méthode de validation dynamique basée sur les données de la leçon
+ * Cette méthode lit les critères de validation depuis les données de la leçon
+ * au lieu de les coder en dur dans le switch/case
+ */
+export const validateLessonDynamically = async (workspace, lessonId) => {
+  if (!workspace) {
+    return { 
+      isValid: false, 
+      message: 'Workspace non disponible', 
+      hint: 'Assurez-vous que Blockly est correctement initialisé' 
+    };
+  }
+
+  try {
+    // Récupérer les données de la leçon depuis l'API
+    const response = await fetch(`/api/lessons/${lessonId}`);
+    if (!response.ok) {
+      throw new Error('Leçon non trouvée');
+    }
+    
+    const lesson = await response.json();
+    
+    // Extraire les critères de validation depuis les données de la leçon
+  const validationCriteria = lesson.validationCriteria || lesson.expectedBlocks || [];
+    
+    if (!validationCriteria || validationCriteria.length === 0) {
+      // Aucun critère défini côté leçon: signaler au client d'utiliser un fallback
+      return {
+        isValid: false,
+        noCriteria: true,
+        message: 'Aucun critère de validation spécifique pour cette leçon',
+        hint: 'Leçon sans règles explicites. On bascule vers une validation simple par bloc.'
+      };
+    }
+
+    // Analyser l'espace de travail
+    const allBlocks = workspace.getAllBlocks();
+    const blockTypes = allBlocks.map(block => block.type);
+    
+  // Validation basée sur les critères dynamiques
+  return await validateByCriteria(workspace, blockTypes, allBlocks, validationCriteria, lesson);
+    
+  } catch (error) {
+    console.error('Erreur lors de la validation dynamique:', error);
+    return { 
+      isValid: false, 
+      message: 'Erreur lors de la validation de la leçon', 
+      hint: 'Vérifiez que la leçon existe et est correctement configurée' 
+    };
+  }
+};
+
+/**
+ * Validation basée sur des critères dynamiques
+ */
+const validateByCriteria = async (workspace, blockTypes, allBlocks, criteria, lesson) => {
+  const results = [];
+  
+  // Parcourir chaque critère de validation
+  for (const criterion of criteria) {
+    const result = await validateSingleCriterion(workspace, blockTypes, allBlocks, criterion);
+    results.push(result);
+    
+    // Si un critère échoue et qu'il est obligatoire, arrêter la validation
+    if (!result.isValid && criterion.required !== false) {
+      return result;
+    }
+  }
+  
+  // Tous les critères sont satisfaits
+  const allValid = results.every(r => r.isValid);
+  return {
+    isValid: allValid,
+    message: allValid 
+      ? `🎉 Excellent! Leçon "${lesson.title}" terminée avec succès!`
+      : 'Certains critères ne sont pas encore remplis',
+    results: results
+  };
+};
+
+/**
+ * Valide un seul critère
+ */
+const validateSingleCriterion = async (workspace, blockTypes, allBlocks, criterion) => {
+  switch (criterion.type) {
+    case 'block_presence':
+      return validateBlockPresence(blockTypes, criterion);
+    
+    case 'block_connection':
+      return validateBlockConnection(allBlocks, criterion);
+    
+    case 'block_sequence':
+      return validateDynamicBlockSequence(allBlocks, criterion);
+    
+    case 'block_field_value':
+      return validateBlockFieldValue(allBlocks, criterion);
+    
+    case 'block_count':
+      return validateBlockCount(blockTypes, criterion);
+
+    // New: result-based validation via simulation
+  case 'state_goal': {
+      try {
+    const { simulateWorkspace, compareState } = await import('./blockExecutor.js');
+    const finalState = simulateWorkspace(workspace, { maxSteps: criterion.maxSteps || 10000 });
+        const { isMatch, details } = compareState(finalState, criterion.goal || {});
+        return {
+          isValid: isMatch,
+          message: isMatch
+            ? (criterion.successMessage || '✅ Objectif atteint par exécution!')
+            : (criterion.errorMessage || `❌ Résultat incorrect. ${details?.join(' | ')}`),
+          state: finalState,
+          details
+        };
+      } catch (e) {
+        return { isValid: false, message: '❌ Erreur simulation', hint: String(e?.message || e) };
+      }
+    }
+    
+    default:
+      return {
+        isValid: true,
+        message: `Type de critère non reconnu: ${criterion.type}`
+      };
+  }
+};
+
+/**
+ * Valide la présence d'un bloc
+ */
+const validateBlockPresence = (blockTypes, criterion) => {
+  const hasBlock = blockTypes.includes(criterion.blockType);
+  return {
+    isValid: hasBlock,
+    message: hasBlock 
+      ? criterion.successMessage || `✅ Bloc "${criterion.blockType}" trouvé!`
+      : criterion.errorMessage || `❌ Ajouter le bloc "${criterion.blockType}"`,
+    hint: criterion.hint || `Cherchez dans la catégorie ${criterion.category || 'appropriée'}`
+  };
+};
+
+/**
+ * Valide la connexion entre blocs
+ */
+const validateBlockConnection = (allBlocks, criterion) => {
+  const sourceBlock = allBlocks.find(block => block.type === criterion.sourceBlock);
+  const targetBlock = allBlocks.find(block => block.type === criterion.targetBlock);
+  
+  if (!sourceBlock || !targetBlock) {
+    return {
+      isValid: false,
+      message: criterion.errorMessage || `❌ Blocs "${criterion.sourceBlock}" et "${criterion.targetBlock}" requis`
+    };
+  }
+  
+  const nextBlock = sourceBlock.getNextBlock();
+  const isConnected = nextBlock && nextBlock.type === criterion.targetBlock;
+  
+  return {
+    isValid: isConnected,
+    message: isConnected 
+      ? criterion.successMessage || `✅ Blocs correctement connectés!`
+      : criterion.errorMessage || `🔗 Connecter "${criterion.targetBlock}" sous "${criterion.sourceBlock}"`
+  };
+};
+
+/**
+ * Valide une séquence de blocs
+ */
+const validateDynamicBlockSequence = (allBlocks, criterion) => {
+  const sequence = criterion.sequence || [];
+  
+  // Trouver le bloc de départ
+  const startBlock = allBlocks.find(block => block.type === sequence[0]);
+  if (!startBlock) {
+    return {
+      isValid: false,
+      message: `❌ Bloc de départ "${sequence[0]}" manquant`
+    };
+  }
+  
+  // Vérifier la séquence
+  let currentBlock = startBlock;
+  for (let i = 1; i < sequence.length; i++) {
+    currentBlock = currentBlock.getNextBlock();
+    if (!currentBlock || currentBlock.type !== sequence[i]) {
+      return {
+        isValid: false,
+        message: `❌ Séquence incorrecte à l'étape ${i + 1}. Attendu: "${sequence[i]}"`
+      };
+    }
+  }
+  
+  return {
+    isValid: true,
+    message: criterion.successMessage || `✅ Séquence de blocs correcte!`
+  };
+};
+
+/**
+ * Valide la valeur d'un champ de bloc
+ */
+const validateBlockFieldValue = (allBlocks, criterion) => {
+  const block = allBlocks.find(block => block.type === criterion.blockType);
+  if (!block) {
+    return {
+      isValid: false,
+      message: `❌ Bloc "${criterion.blockType}" manquant`
+    };
+  }
+  
+  const fieldValue = block.getFieldValue(criterion.fieldName);
+  const isValid = fieldValue === criterion.expectedValue;
+  
+  return {
+    isValid: isValid,
+    message: isValid
+      ? criterion.successMessage || `✅ Valeur correcte: ${fieldValue}`
+      : criterion.errorMessage || `❌ Changer "${criterion.fieldName}" à "${criterion.expectedValue}"`
+  };
+};
+
+/**
+ * Valide le nombre de blocs d'un type
+ */
+const validateBlockCount = (blockTypes, criterion) => {
+  const count = blockTypes.filter(type => type === criterion.blockType).length;
+  const isValid = count === criterion.expectedCount;
+  
+  return {
+    isValid: isValid,
+    message: isValid
+      ? criterion.successMessage || `✅ Nombre correct de blocs "${criterion.blockType}": ${count}`
+      : criterion.errorMessage || `❌ Attendu ${criterion.expectedCount} blocs "${criterion.blockType}", trouvé ${count}`
+  };
+};
+
 export const validateLesson = (workspace, lesson) => {
   const topBlocks = workspace.getTopBlocks(true);
   const expectedBlocks = lesson.expectedBlocks;
@@ -75,17 +313,46 @@ export const validateBlockChain = (actualBlock, expectedBlock) => {
   return validateBlockChain(nextActual, nextExpected);
 };
 
-export const validateTaskCompletion = (workspace, task) => {
+export const validateTaskCompletion = async (workspace, task) => {
+  // Si la tâche a un lessonId, utiliser la validation dynamique
+  if (task.lessonId) {
+    const dynamicResult = await validateLessonDynamically(workspace, task.lessonId);
+    // Si la leçon n'a aucun critère défini, basculer sur la validation par cas
+    if (dynamicResult && dynamicResult.noCriteria) {
+      const allBlocks = workspace.getAllBlocks();
+      const blockTypes = allBlocks.map(block => block.type);
+      return validateTaskCase(task.blockType, blockTypes, allBlocks, workspace);
+    }
+    return dynamicResult;
+  }
+  
+  // Sinon, utiliser l'ancienne méthode avec switch/case
   const allBlocks = workspace.getAllBlocks();
   const blockTypes = allBlocks.map(block => block.type);
 
-  switch (task.blockType) {
+  return validateTaskCase(task.blockType, blockTypes, allBlocks, workspace);
+};
+
+/**
+ * Fonction de validation par cas (ancienne méthode)
+ * Garde la compatibilité avec l'existant
+ */
+const validateTaskCase = (blockType, blockTypes, allBlocks, workspace) => {
+  switch (blockType) {
     case 'event_whenflagclicked':
       return {
         isValid: blockTypes.includes('event_whenflagclicked'),
         message: blockTypes.includes('event_whenflagclicked') 
-          ? 'Great! You added the "when flag clicked" block!' 
-          : 'Add the "when flag clicked" block from the Events category.'
+          ? '🎉 Parfait! Tu as ajouté le bloc "quand drapeau cliqué"!' 
+          : '❌ Ajoute le bloc "quand drapeau cliqué" depuis la catégorie Événements (orange).',
+        hint: '💡 Cherche le bloc avec un drapeau vert dans la section Events',
+        validationId: 'event_flag_clicked',
+        expectedBlock: {
+          type: 'event_whenflagclicked',
+          category: 'Events',
+          color: 'orange',
+          icon: '🏁'
+        }
       };
 
     case 'motion_movesteps':
@@ -177,6 +444,14 @@ export const validateTaskCompletion = (workspace, task) => {
           : 'Add the "play sound until done" block from the Sound category.'
       };
 
+    case 'sound_stop_all':
+      return {
+        isValid: blockTypes.includes('sound_stop_all'),
+        message: blockTypes.includes('sound_stop_all') 
+          ? '⏹️ Perfect! All sounds will be stopped!' 
+          : '⏹️ Add the "stop all sounds" block from the Sound category.'
+      };
+
     // Control blocks validation
     case 'control_wait':
       return {
@@ -190,8 +465,16 @@ export const validateTaskCompletion = (workspace, task) => {
       return {
         isValid: blockTypes.includes('control_repeat'),
         message: blockTypes.includes('control_repeat') 
-          ? 'Excellent! You added a repeat loop!' 
-          : 'Add the "repeat" block from the Control category.'
+          ? '🔄 Excellent! You added a repeat loop!' 
+          : '🔄 Add the "repeat" block from the Control category.',
+        hint: '💡 Look for the "repeat" block in the Control (yellow) category',
+        validationId: 'control_repeat_loop',
+        expectedBlock: {
+          type: 'control_repeat',
+          category: 'Control',
+          color: 'yellow',
+          icon: '🔄'
+        }
       };
 
     // Looks blocks validation

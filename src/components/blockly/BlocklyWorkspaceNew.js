@@ -162,7 +162,7 @@ export default function BlocklyWorkspace({ toolboxCategories, onWorkspaceChange 
           },
           {
             kind: 'block',
-            type: 'sound_stop_all_sounds'
+            type: 'sound_stop_all'
           }
         ]
       },

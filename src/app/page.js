@@ -1,5 +1,3 @@
-'use client';
-
 import InteractiveLab from '../components/InteractiveLab';
 
 export default function Home() {

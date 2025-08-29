@@ -37,23 +37,34 @@ export default function GuidePanel({ lesson, completedTasks, onTaskComplete, wor
     }
   };
 
-  const handleCheckWork = () => {
+  const handleCheckWork = async () => {
     // Validate workspace blocks
     if (workspace) {
-      const validation = validateTaskCompletion(workspace, currentTask);
-      
-      if (validation.isValid) {
-        onTaskComplete(currentTask.id);
+      try {
+        // Utiliser la nouvelle validation automatique avec l'ID de la leçon
+        const validation = await validateTaskCompletion(workspace, {
+          lessonId: lesson.id,  // ID de la leçon pour validation automatique
+          blockType: currentTask.blockType  // Fallback pour l'ancienne méthode
+        });
         
-        // Auto-advance to next task after a delay
-        setTimeout(() => {
-          if (currentTaskIndex < lesson.tasks.length - 1) {
-            handleNextTask();
-          }
-        }, 1500);
-      } else {
-        // Show validation message (you could add a state for this)
-        alert(validation.message);
+        setValidationMessage(validation.message || '');
+        
+        if (validation.isValid) {
+          onTaskComplete(currentTask.id);
+          
+          // Auto-advance to next task after a delay
+          setTimeout(() => {
+            if (currentTaskIndex < lesson.tasks.length - 1) {
+              handleNextTask();
+            }
+          }, 1500);
+        } else {
+          // Afficher le message de validation à l'utilisateur
+          setValidationMessage(validation.message);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la validation:', error);
+        setValidationMessage('Erreur lors de la validation');
       }
     }
   };
@@ -181,6 +192,36 @@ export default function GuidePanel({ lesson, completedTasks, onTaskComplete, wor
           </div>
         )}
 
+        {/* Validation Message */}
+        {validationMessage && (
+          <div className={`mb-8 rounded-2xl p-6 border shadow-lg ${
+            validationMessage.includes('✅') || validationMessage.includes('🎉') 
+              ? 'bg-gradient-to-br from-emerald-50/80 to-green-100/80 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-200 dark:border-emerald-700/50'
+              : 'bg-gradient-to-br from-red-50/80 to-rose-100/80 dark:from-red-900/20 dark:to-rose-900/20 border-red-200 dark:border-red-700/50'
+          }`}>
+            <div className="flex items-center space-x-4">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${
+                validationMessage.includes('✅') || validationMessage.includes('🎉')
+                  ? 'bg-gradient-to-br from-emerald-500 to-green-600'
+                  : 'bg-gradient-to-br from-red-500 to-rose-600'
+              }`}>
+                <span className="text-white text-lg">
+                  {validationMessage.includes('✅') || validationMessage.includes('🎉') ? '✅' : '❌'}
+                </span>
+              </div>
+              <div>
+                <p className={`font-semibold ${
+                  validationMessage.includes('✅') || validationMessage.includes('🎉')
+                    ? 'text-emerald-800 dark:text-emerald-200'
+                    : 'text-red-800 dark:text-red-200'
+                }`}>
+                  {validationMessage}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Success Message */}
         {isTaskCompleted && (
           <div className="mb-8 bg-gradient-to-br from-emerald-50/80 to-green-100/80 dark:from-emerald-900/20 dark:to-green-900/20 backdrop-blur-sm rounded-2xl p-6 border border-emerald-200 dark:border-emerald-700/50 shadow-lg animate-fadeIn">
@@ -232,7 +273,7 @@ export default function GuidePanel({ lesson, completedTasks, onTaskComplete, wor
                 Lesson Complete!
               </h3>
               <p className="text-purple-600 dark:text-purple-400">
-                You've mastered this lesson perfectly!
+                You&apos;ve mastered this lesson perfectly!
               </p>
             </div>
             <button
